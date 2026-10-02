@@ -1,0 +1,82 @@
+<mxfile host="Electron" modified="2023-10-17T00:00:00.000Z" agent="Mozilla/5.0" version="21.1.2" type="device">
+  <diagram id="emulator_arch" name="Architecture">
+    <mxGraphModel dx="1200" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <!-- Tiny Tapeout Chip Boundary -->
+        <mxCell id="chip_bound" value="TINY TAPEOUT CHIP BOUNDARY" style="rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=top;fillColor=#f5f5f5;fontStyle=1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="150" y="80" width="600" height="850" as="geometry" />
+        </mxCell>
+        
+        <!-- SPI Host -->
+        <mxCell id="spi_host" value="External SPI Host" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="350" y="10" width="200" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Instruction RAM -->
+        <mxCell id="inst_ram" value="Hardware SPI Slave&#10;+ FIFOs + Inst RAM" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="350" y="150" width="200" height="80" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="pdata_cpu" value="CPU 0&#10;(Accumulator Core)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="200" y="300" width="160" height="180" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="pdir_cpu" value="CPU 1&#10;(Accumulator Core)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="540" y="300" width="160" height="180" as="geometry" />
+        </mxCell>
+
+        <mxCell id="cpu2" value="CPU 2&#10;(Accumulator Core)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="200" y="520" width="160" height="180" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="cpu3" value="CPU 3&#10;(Accumulator Core)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="540" y="520" width="160" height="180" as="geometry" />
+        </mxCell>
+
+        <!-- ALL 8 UI_IN PINS (Left side) -->
+        <mxCell id="in0" value="ui_in[0]: CS" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;" vertex="1" parent="1"><mxGeometry x="20" y="150" width="90" height="30" as="geometry" /></mxCell>
+        <mxCell id="in1" value="ui_in[1]: SCLK" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;" vertex="1" parent="1"><mxGeometry x="20" y="190" width="90" height="30" as="geometry" /></mxCell>
+        <mxCell id="in2" value="ui_in[2]: MOSI" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;" vertex="1" parent="1"><mxGeometry x="20" y="230" width="90" height="30" as="geometry" /></mxCell>
+        <mxCell id="in3" value="ui_in[3]: RUN" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;" vertex="1" parent="1"><mxGeometry x="20" y="270" width="90" height="30" as="geometry" /></mxCell>
+
+
+        <!-- ALL 8 UO_OUT PINS (Right side) -->
+        <mxCell id="out0" value="uo_out[0]: MISO" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;" vertex="1" parent="1"><mxGeometry x="800" y="150" width="100" height="30" as="geometry" /></mxCell>
+
+
+        <!-- ALL 8 UIO PINS (Bottom right) -->
+        <mxCell id="uio0" value="uio[0]: Bidi 0" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;" vertex="1" parent="1"><mxGeometry x="380" y="740" width="90" height="30" as="geometry" /></mxCell>
+        <mxCell id="uio1" value="uio[1]: Bidi 1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;" vertex="1" parent="1"><mxGeometry x="380" y="780" width="90" height="30" as="geometry" /></mxCell>
+        <mxCell id="uio2" value="uio[2]: Bidi 2" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;" vertex="1" parent="1"><mxGeometry x="380" y="820" width="90" height="30" as="geometry" /></mxCell>
+        <mxCell id="uio3" value="uio[3]: Bidi 3" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;" vertex="1" parent="1"><mxGeometry x="380" y="860" width="90" height="30" as="geometry" /></mxCell>
+
+
+        <!-- Edges: Inputs to RAM -->
+        <mxCell id="e_in0" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" parent="1" source="in0" target="inst_ram"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_in1" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" parent="1" source="in1" target="inst_ram"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_in2" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" parent="1" source="in2" target="inst_ram"><mxGeometry relative="1" as="geometry" /></mxCell>
+        
+        <!-- Edge: RAM to Out0 -->
+        <mxCell id="e_out0" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" parent="1" source="inst_ram" target="out0"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- Edges: GP Inputs to PDATA -->
+
+
+        <!-- Edges: PDATA to GP Outputs -->
+
+
+        <!-- Edges: PDATA to UIO -->
+        <mxCell id="e_pu_0" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.25;exitY=1;" edge="1" parent="1" source="pdata_cpu" target="uio0"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_pu_7" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.75;exitY=1;" edge="1" parent="1" source="pdata_cpu" target="uio3"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- Edges: PDIR to UIO -->
+        <mxCell id="e_di_0" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.25;exitY=1;" edge="1" parent="1" source="pdir_cpu" target="uio0"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_di_7" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.75;exitY=1;" edge="1" parent="1" source="pdir_cpu" target="uio3"><mxGeometry relative="1" as="geometry" /></mxCell>
+        
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
