@@ -110,6 +110,12 @@ module top (
         .mem_addr(cpu0_mem_addr), .mem_wdata(cpu0_mem_wdata), .mem_we(cpu0_mem_we), .mem_re(cpu0_mem_re),
         .mem_rdata(cpu0_mem_rdata), .mem_stall(cpu0_mem_stall)
     );
+    
+    always @(posedge clk) begin
+        if (cpu0_run && core0.state == 3'd4) begin
+            $display("DBG|0|%0t|%h|%h|%h|%h|%h|%h|%h|%h|%h|%h|%h|%h|%h", $time, core0.pc, core0.curr_opcode, core0.acc, core0.b_reg, core0.r_regs[2], core0.r_regs[3], core0.r_regs[4], core0.r_regs[8], core0.flag_carry, core0.flag_zero, core0.pin_dir, core0.pin_out);
+        end
+    end
 
     // ========================================================
     // CPU 1 SUBSYSTEM
@@ -137,6 +143,10 @@ module top (
     fifo tx1 (.clk(clk), .rst_n(rst_n), .wdata(cpu1_mem_wdata), .we(cpu1_tx_we),
               .rdata(cpu1_tx_fifo_rdata), .re(cpu1_tx_fifo_re), .empty(cpu1_tx_fifo_empty), .full(cpu1_tx_full));
 
+    always @(posedge clk) begin
+        if (cpu1_tx_we) $display("[%0t] CPU 1 WROTE TO TX FIFO: 0x%h", $time, cpu1_mem_wdata);
+    end
+
     wire [7:0] cpu1_timer_rdata; wire cpu1_timer_zero;
     wire cpu1_timer_we_l = (cpu1_mem_addr == 4'h7) && cpu1_mem_we;
     wire cpu1_timer_we_h = (cpu1_mem_addr == 4'h8) && cpu1_mem_we;
@@ -161,6 +171,12 @@ module top (
         .mem_addr(cpu1_mem_addr), .mem_wdata(cpu1_mem_wdata), .mem_we(cpu1_mem_we), .mem_re(cpu1_mem_re),
         .mem_rdata(cpu1_mem_rdata), .mem_stall(cpu1_mem_stall)
     );
+
+    always @(posedge clk) begin
+        if (cpu1_run && core1.state == 3'd4) begin
+            $display("DBG|1|%0t|%h|%h|%h|%h|%h|%h|%h|%h|%h|%h|%h|%h|%h", $time, core1.pc, core1.curr_opcode, core1.acc, core1.b_reg, core1.r_regs[2], core1.r_regs[3], core1.r_regs[4], core1.r_regs[8], core1.flag_carry, core1.flag_zero, core1.pin_dir, core1.pin_out);
+        end
+    end
 
     // ========================================================
     // CPU 2 SUBSYSTEM

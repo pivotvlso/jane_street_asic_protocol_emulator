@@ -57,3 +57,15 @@ The ASIC utilizes small, 8-byte hardware FIFOs to buffer data between the SPI Ho
 ## 13. Complex Inter-Processor Synchronization
 * **Limitation:** When multiple CPUs interact with the same external bus (e.g., CPU 1 extracting UART data and CPU 2 acting as a Parity watchdog on the same wire), there are no hardware synchronization primitives (semaphores, mutexes) between them.
 * **Impact:** Syncing multiple CPUs relies entirely on manual, mathematically precise cycle-counting. If CPU 1's baud delay loop is 62 cycles and CPU 2's parity loop is 50 cycles, the host must manually calibrate their independent `TIMER_L` hardware timers so they remain perfectly phase-aligned over the duration of the transmission.
+
+## 14. I2C Protocol Limitations
+* **Limitation:** The current firmware supports standard 8-bit I2C transactions with clock stretching, but lacks advanced features due to architectural constraints.
+* **Impact:**
+  - **Memory Limits (Split TX/RX):** Because of the 128-nibble memory cap (Limitation #3), it is impossible to fit both Master Transmit and Master Receive logic into a single CPU core. As a result, the I2C routines are split into unidirectional scripts (`i2c_master.asm` for TX, `i2c_master_rx.asm` for RX) that the Host must swap in dynamically.
+  - **Multi-Master Arbitration:** The ASIC CPUs share physical pins without a hardware bus arbiter (Limitation #9). Simultaneous master operations will corrupt data.
+  - **10-bit Addressing:** Handling 10-bit addressing state machines exceeds the strict 128-nibble memory limit.
+  - **High-Speed Mode (3.4 Mbps):** The software bit-banging overhead limits the theoretical maximum speed to ~1.25 Mbps (at 50 MHz), making High-Speed mode physically impossible (Standard and Fast modes are fully supported).
+
+## 15. Silicon Errata: Register Address 0x9 is Unmapped
+* **Limitation:** In the CPU core (`cpu_core.v`), internal registers are decoded using `(addr <= 4'h3) || (addr == 4'h8) || (addr >= 4'hA)`. Address `0x9` (which the assembler maps to `R4`) falls in a gap. It is neither treated as an internal register nor mapped to any external hardware peripheral.
+* **Impact:** Any `STORE 9` command writes to an external void, and any `LOAD 9` command reads from an unmapped external memory space (which safely defaults to `0x00`). Firmware developers MUST completely avoid using `R4` (`0x9`) as it acts as a black hole and will silently corrupt data if used as a general-purpose register.

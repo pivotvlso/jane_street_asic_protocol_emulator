@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PivotVLSI IDE - Hardware Debugger</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --surface-hover: #334155;
+            --primary: #3b82f6;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #10b981;
+            --danger: #ef4444;
+            --border: #334155;
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(to right, #60a5fa, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 2rem;
+        }
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        button {
+            background-color: var(--surface);
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        button:hover {
+            background-color: var(--surface-hover);
+            transform: translateY(-2px);
+        }
+        button.primary {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+        button.primary:hover {
+            background-color: #2563eb;
+        }
+        button.success { background-color: var(--accent); border-color: var(--accent); }
+        button.success:hover { background-color: #059669; }
+        
+        .cpu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            width: 100%;
+            max-width: 1400px;
+        }
+        .cpu-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+        .cpu-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 1rem;
+            margin-bottom: 1rem;
+        }
+        .cpu-header h2 { margin: 0; font-size: 1.5rem; }
+        .time-badge {
+            background: var(--surface);
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+        .content-split {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .register-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+        .reg {
+            background: rgba(15, 23, 42, 0.5);
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .reg-label { color: var(--text-muted); font-size: 0.75rem; font-weight: 600; }
+        .reg-value { font-family: monospace; font-size: 1rem; font-weight: bold; color: #38bdf8; }
+        .flag-value { color: #f472b6; }
+        
+        .asm-container {
+            background: #000;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            font-family: 'Fira Code', monospace;
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+        .asm-line {
+            display: flex;
+            padding: 0 0.5rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            position: relative;
+        }
+        .asm-line:hover { background: rgba(255,255,255,0.05); }
+        .asm-line.active {
+            background-color: rgba(59, 130, 246, 0.4);
+            border-left: 3px solid var(--primary);
+        }
+        .asm-line.breakpoint .asm-pc {
+            color: #ef4444;
+            font-weight: bold;
+        }
+        .asm-line.breakpoint::before {
+            content: '●';
+            color: #ef4444;
+            position: absolute;
+            left: -12px;
+            font-size: 0.75rem;
+        }
+        .asm-pc {
+            color: var(--text-muted);
+            margin-right: 1rem;
+            min-width: 2rem;
+            text-align: right;
+            user-select: none;
+        }
+        .asm-text {
+            color: #e2e8f0;
+            white-space: pre;
+        }
+        .asm-text.comment { color: #64748b; }
+        
+        .status {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            background: var(--surface);
+            width: 100%;
+            max-width: 1200px;
+            text-align: center;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <h1>Hardware Debugger</h1>
+    <div class="status" id="status">Connecting...</div>
+    <div class="controls">
+        <select id="tbSelect" onchange="loadTb(this.value)">
+            <option>Loading testbenches...</option>
+        </select>
+        <button onclick="sendCommand('step')">Step (S)</button>
+        <button onclick="sendCommand('step10')">Step 10</button>
+        <button class="success" onclick="sendCommand('play')" id="playBtn">Play (C)</button>
+        <button onclick="sendCommand('pause')">Pause</button>
+    </div>
+    
+    <div class="cpu-grid" id="cpuGrid">
+        <!-- CPU cards generated dynamically -->
+    </div>
+
+    <script>
+        let isPlaying = false;
+        let cpuSources = {};
+        
+        async function fetchSource(cpuId) {
+            try {
+                const res = await fetch('/source?cpu=' + cpuId);
+                cpuSources[cpuId] = await res.json();
+            } catch (e) {
+                console.error("Failed to fetch source for CPU", cpuId);
+            }
+        }
+
+        async function fetchTests() {
+            try {
+                const res = await fetch('/tests');
+                const data = await res.json();
+                const sel = document.getElementById('tbSelect');
+                sel.innerHTML = '';
+                for (let tb of data.tests) {
+                    const opt = document.createElement('option');
+                    opt.value = tb.name;
+                    opt.innerText = tb.name;
+                    if (tb.name === data.current) opt.selected = true;
+                    sel.appendChild(opt);
+                }
+            } catch(e) {
+                console.error("Failed to fetch tests", e);
+            }
+        }
+        
+        async function loadTb(val) {
+            document.getElementById('status').innerText = 'Compiling and Running...';
+            document.getElementById('status').style.color = '#facc15';
+            await fetch('/command?cmd=load_tb&tb=' + encodeURIComponent(val), { method: 'POST' });
+            cpuSources = {}; // Clear cached sources
+            const grid = document.getElementById('cpuGrid');
+            grid.innerHTML = ''; // Clear grid since CPUs might change
+            fetchState();
+        }
+
+        async function fetchState() {
+            try {
+                const res = await fetch('/state');
+                const data = await res.json();
+                document.getElementById('status').innerText = 'Connected - ' + (data.paused ? 'Paused' : 'Running');
+                document.getElementById('status').style.color = data.paused ? '#facc15' : '#10b981';
+                renderCPUs(data.cpus);
+                isPlaying = !data.paused;
+                document.getElementById('playBtn').innerText = isPlaying ? 'Running...' : 'Play (C)';
+            } catch (err) {
+                document.getElementById('status').innerText = 'Disconnected';
+                document.getElementById('status').style.color = 'var(--danger)';
+            }
+        }
+
+        async function sendCommand(cmd) {
+            await fetch('/command?cmd=' + cmd, { method: 'POST' });
+            fetchState();
+        }
+        
+        async function toggleBreakpoint(cpuId, pc) {
+            if (!pc) return;
+            await fetch(`/command?cmd=toggle_bp&cpu=${cpuId}&pc=${pc}`, { method: 'POST' });
+            fetchState();
+        }
+        
+        function formatAsmLine(line, cpu, cpuId, lineIdx) {
+            const isActive = line.pc !== "" && line.pc === cpu.pc;
+            const isBp = line.pc !== "" && cpu.breakpoints && cpu.breakpoints.includes(line.pc);
+            const isComment = line.text.trim().startsWith("//");
+            const textClass = isComment ? 'asm-text comment' : 'asm-text';
+            let classes = ['asm-line'];
+            if (isActive) classes.push('active');
+            if (isBp) classes.push('breakpoint');
+            
+            return `<div class="${classes.join(' ')}" id="asm-${cpuId}-${lineIdx}" onclick="toggleBreakpoint(${cpuId}, '${line.pc}')">
+                <span class="asm-pc">${line.pc}</span>
+                <span class="${textClass}">${line.text.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</span>
+            </div>`;
+        }
+
+        async function renderCPUs(cpus) {
+            const grid = document.getElementById('cpuGrid');
+            for (const id in cpus) {
+                if (!cpuSources[id]) {
+                    await fetchSource(id);
+                }
+                
+                const cpu = cpus[id];
+                let card = document.getElementById('cpu-card-' + id);
+                
+                if (!card) {
+                    card = document.createElement('div');
+                    card.className = 'cpu-card';
+                    card.id = 'cpu-card-' + id;
+                    
+                    let asmHtml = '<div style="color:#64748b; font-style:italic">No ASM loaded for this CPU.</div>';
+                    if (cpuSources[id] && cpuSources[id].length > 0) {
+                        asmHtml = cpuSources[id].map((l, idx) => formatAsmLine(l, cpu, id, idx)).join('');
+                    }
+                    
+                    card.innerHTML = `
+                        <div class="cpu-header">
+                            <h2>CPU ${id}</h2>
+                            <span class="time-badge" id="time-${id}">${cpu.time} ns</span>
+                        </div>
+                        <div class="content-split">
+                            <div class="register-grid">
+                                <div class="reg"><span class="reg-label">PC</span><span class="reg-value" id="pc-${id}">0x${cpu.pc}</span></div>
+                                <div class="reg"><span class="reg-label">OPCODE</span><span class="reg-value" id="op-${id}">0x${cpu.op}</span></div>
+                                <div class="reg"><span class="reg-label">ACC</span><span class="reg-value" id="acc-${id}">0x${cpu.acc}</span></div>
+                                <div class="reg"><span class="reg-label">B REG</span><span class="reg-value" id="b-${id}">0x${cpu.b}</span></div>
+                                <div class="reg"><span class="reg-label">R2</span><span class="reg-value" id="r2-${id}">0x${cpu.r2}</span></div>
+                                <div class="reg"><span class="reg-label">R3</span><span class="reg-value" id="r3-${id}">0x${cpu.r3}</span></div>
+                                <div class="reg"><span class="reg-label">FLAGS (C,Z)</span><span class="reg-value flag-value" id="flags-${id}">${cpu.c}, ${cpu.z}</span></div>
+                                <div class="reg"><span class="reg-label">PIN (DIR/OUT)</span><span class="reg-value" id="pin-${id}">0x${cpu.pin_dir} / 0x${cpu.pin_out}</span></div>
+                            </div>
+                            <div class="asm-container" id="asm-container-${id}">
+                                ${asmHtml}
+                            </div>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                    
+                    // Auto scroll to active line initially
+                    setTimeout(() => {
+                        const container = document.getElementById('asm-container-' + id);
+                        if (container) {
+                            const activeLine = container.querySelector('.asm-line.active');
+                            if (activeLine) activeLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                    }, 50);
+                } else {
+                    // Update existing DOM values efficiently
+                    document.getElementById('time-' + id).innerText = cpu.time + ' ns';
+                    document.getElementById('pc-' + id).innerText = '0x' + cpu.pc;
+                    document.getElementById('op-' + id).innerText = '0x' + cpu.op;
+                    document.getElementById('acc-' + id).innerText = '0x' + cpu.acc;
+                    document.getElementById('b-' + id).innerText = '0x' + cpu.b;
+                    document.getElementById('r2-' + id).innerText = '0x' + cpu.r2;
+                    document.getElementById('r3-' + id).innerText = '0x' + cpu.r3;
+                    document.getElementById('flags-' + id).innerText = cpu.c + ', ' + cpu.z;
+                    document.getElementById('pin-' + id).innerText = '0x' + cpu.pin_dir + ' / 0x' + cpu.pin_out;
+                    
+                    // Update ASM highlighting without replacing DOM
+                    if (cpuSources[id] && cpuSources[id].length > 0) {
+                        cpuSources[id].forEach((line, idx) => {
+                            if (line.pc !== "") {
+                                const el = document.getElementById(`asm-${id}-${idx}`);
+                                if (el) {
+                                    const isActive = line.pc === cpu.pc;
+                                    const isBp = cpu.breakpoints && cpu.breakpoints.includes(line.pc);
+                                    let classes = ['asm-line'];
+                                    if (isActive) classes.push('active');
+                                    if (isBp) classes.push('breakpoint');
+                                    
+                                    const newClass = classes.join(' ');
+                                    if (el.className !== newClass) {
+                                        el.className = newClass;
+                                        if (isActive) {
+                                            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    }
+                }
+            }
+        }
+
+        fetchTests();
+        setInterval(fetchState, 500);
+        fetchState();
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 's' || e.key === 'S') sendCommand('step');
+            if (e.key === 'c' || e.key === 'C') sendCommand('play');
+        });
+    </script>
+</body>
+</html>
