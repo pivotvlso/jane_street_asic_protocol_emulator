@@ -1,0 +1,1 @@
+module check; always @(posedge test_4_2_ethernet_rx.clk) if (test_4_2_ethernet_rx.dut.core0.state == 3'd5) $display("mem_addr=%h, mem_re=%b, rdata=%h", test_4_2_ethernet_rx.dut.cpu0_mem_addr, test_4_2_ethernet_rx.dut.cpu0_mem_re, test_4_2_ethernet_rx.dut.cpu0_mem_rdata); endmodule

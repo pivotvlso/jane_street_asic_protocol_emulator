@@ -67,10 +67,10 @@
         
         .cpu-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            grid-template-columns: repeat(2, 1fr);
             gap: 2rem;
             width: 100%;
-            max-width: 1400px;
+            max-width: 1800px;
         }
         .cpu-card {
             background: rgba(30, 41, 59, 0.7);
@@ -116,9 +116,12 @@
             justify-content: space-between;
             align-items: center;
             border: 1px solid rgba(255,255,255,0.05);
+            min-height: 2.5rem;
         }
         .reg-label { color: var(--text-muted); font-size: 0.75rem; font-weight: 600; }
+        .reg-val-container { display: flex; flex-direction: row; align-items: baseline; gap: 0.5rem; }
         .reg-value { font-family: monospace; font-size: 1rem; font-weight: bold; color: #38bdf8; }
+        .reg-exp { font-size: 0.8rem; color: #a78bfa; font-family: monospace; }
         .flag-value { color: #f472b6; }
         
         .asm-container {
@@ -127,6 +130,7 @@
             padding: 1rem;
             height: 300px;
             overflow-y: auto;
+            overflow-x: auto;
             border: 1px solid var(--border);
             font-family: 'Fira Code', monospace;
             font-size: 0.875rem;
@@ -191,6 +195,10 @@
         <button onclick="sendCommand('step10')">Step 10</button>
         <button class="success" onclick="sendCommand('play')" id="playBtn">Play (C)</button>
         <button onclick="sendCommand('pause')">Pause</button>
+        <button style="background-color: var(--danger); border-color: var(--danger);" onclick="loadTb(document.getElementById('tbSelect').value)">Restart (R)</button>
+        <label style="color: white; margin-left: 1rem; display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+            <input type="checkbox" id="chk-stop-on-error"> Stop on Error
+        </label>
     </div>
     
     <div class="cpu-grid" id="cpuGrid">
@@ -253,9 +261,42 @@
             }
         }
 
+        let isVerifyPlaying = false;
+        let previousExps = {}; // { cpuId: { reg: "0x..." } }
+        let previousPcs = {};
+
         async function sendCommand(cmd) {
+            let stopOnError = document.getElementById('chk-stop-on-error') && document.getElementById('chk-stop-on-error').checked;
+            
+            if (cmd === 'play') {
+                if (stopOnError) {
+                    if (!isVerifyPlaying) {
+                        isVerifyPlaying = true;
+                        document.getElementById('playBtn').innerText = 'Running...';
+                        verifyPlayLoop();
+                    } else {
+                        isVerifyPlaying = false;
+                        document.getElementById('playBtn').innerText = 'Play (C)';
+                    }
+                    return;
+                }
+            } else if (cmd === 'pause') {
+                isVerifyPlaying = false;
+            }
+            
             await fetch('/command?cmd=' + cmd, { method: 'POST' });
             fetchState();
+        }
+        
+        async function verifyPlayLoop() {
+            if (!isVerifyPlaying) return;
+            
+            await fetch('/command?cmd=step', { method: 'POST' });
+            await fetchState();
+            
+            if (isVerifyPlaying) {
+                setTimeout(verifyPlayLoop, 0); // fastest loop
+            }
         }
         
         async function toggleBreakpoint(cpuId, pc) {
@@ -306,14 +347,14 @@
                         </div>
                         <div class="content-split">
                             <div class="register-grid">
-                                <div class="reg"><span class="reg-label">PC</span><span class="reg-value" id="pc-${id}">0x${cpu.pc}</span></div>
-                                <div class="reg"><span class="reg-label">OPCODE</span><span class="reg-value" id="op-${id}">0x${cpu.op}</span></div>
-                                <div class="reg"><span class="reg-label">ACC</span><span class="reg-value" id="acc-${id}">0x${cpu.acc}</span></div>
-                                <div class="reg"><span class="reg-label">B REG</span><span class="reg-value" id="b-${id}">0x${cpu.b}</span></div>
-                                <div class="reg"><span class="reg-label">R2</span><span class="reg-value" id="r2-${id}">0x${cpu.r2}</span></div>
-                                <div class="reg"><span class="reg-label">R3</span><span class="reg-value" id="r3-${id}">0x${cpu.r3}</span></div>
-                                <div class="reg"><span class="reg-label">FLAGS (C,Z)</span><span class="reg-value flag-value" id="flags-${id}">${cpu.c}, ${cpu.z}</span></div>
-                                <div class="reg"><span class="reg-label">PIN (DIR/OUT)</span><span class="reg-value" id="pin-${id}">0x${cpu.pin_dir} / 0x${cpu.pin_out}</span></div>
+                                <div class="reg"><span class="reg-label">PC</span><div class="reg-val-container"><span class="reg-value" id="pc-${id}">0x${cpu.pc}</span><span class="reg-exp" id="exp-pc-${id}"></span></div></div>
+                                <div class="reg"><span class="reg-label">OPCODE</span><div class="reg-val-container"><span class="reg-value" id="op-${id}">0x${cpu.op}</span><span class="reg-exp" id="exp-op-${id}"></span></div></div>
+                                <div class="reg"><span class="reg-label">ACC</span><div class="reg-val-container"><span class="reg-value" id="acc-${id}">0x${cpu.acc}</span><span class="reg-exp" id="exp-acc-${id}"></span></div></div>
+                                <div class="reg"><span class="reg-label">B REG</span><div class="reg-val-container"><span class="reg-value" id="b-${id}">0x${cpu.b}</span><span class="reg-exp" id="exp-b-${id}"></span></div></div>
+                                <div class="reg"><span class="reg-label">R2</span><div class="reg-val-container"><span class="reg-value" id="r2-${id}">0x${cpu.r2}</span><span class="reg-exp" id="exp-r2-${id}"></span></div></div>
+                                <div class="reg"><span class="reg-label">R3</span><div class="reg-val-container"><span class="reg-value" id="r3-${id}">0x${cpu.r3}</span><span class="reg-exp" id="exp-r3-${id}"></span></div></div>
+                                <div class="reg"><span class="reg-label">FLAGS (C,Z)</span><div class="reg-val-container"><span class="reg-value flag-value" id="flags-${id}">${cpu.c}, ${cpu.z}</span><span class="reg-exp" id="exp-flags-${id}"></span></div></div>
+                                <div class="reg"><span class="reg-label">PIN (DIR/OUT)</span><div class="reg-val-container"><span class="reg-value" id="pin-${id}">0x${cpu.pin_dir} / 0x${cpu.pin_out}</span><span class="reg-exp" id="exp-pin-${id}"></span></div></div>
                             </div>
                             <div class="asm-container" id="asm-container-${id}">
                                 ${asmHtml}
@@ -366,6 +407,126 @@
                         });
                     }
                 }
+                
+                // Update expectations
+                if (cpuSources[id]) {
+                    const activeLine = cpuSources[id].find(l => l.pc === cpu.pc);
+                    let exps = {};
+                    if (activeLine && activeLine.text) {
+                        const match = activeLine.text.match(/\[EXPECT:\s*([^\]]+)\]/);
+                        if (match) {
+                            match[1].split(',').forEach(p => {
+                                let parts = p.split('=');
+                                if (parts.length === 2) {
+                                    let reg = parts[0].trim().toLowerCase();
+                                    let valExp = parts[1].trim();
+                                    
+                                    // Evaluate math expressions in valExp
+                                    let evalStr = valExp.toUpperCase();
+                                    evalStr = evalStr.replace(/\bACC\b/g, "0x"+cpu.acc);
+                                    evalStr = evalStr.replace(/\bB\b/g, "0x"+cpu.b);
+                                    evalStr = evalStr.replace(/\bR2\b/g, "0x"+cpu.r2);
+                                    evalStr = evalStr.replace(/\bR3\b/g, "0x"+cpu.r3);
+                                    
+                                    let computedVal = valExp;
+                                    try {
+                                        // Only evaluate if it contains numbers or hex
+                                        if (/[0-9]/.test(evalStr) || evalStr.includes('0x')) {
+                                            let res = eval(evalStr);
+                                            if (typeof res === 'number') {
+                                                if (res < 0) res = (res >>> 0) & 0xff; // 8-bit wrap
+                                                else res = res & 0xff;
+                                                computedVal = "0x" + res.toString(16).padStart(2, '0');
+                                            }
+                                        }
+                                    if (reg === 'pin_dir') {
+                                        exps['pin'] = computedVal + ' / 0x' + cpu.pin_out;
+                                    } else if (reg === 'pin_out') {
+                                        exps['pin'] = '0x' + cpu.pin_dir + ' / ' + computedVal;
+                                    } else if (reg === 'pin') {
+                                        exps['pin'] = computedVal;
+                                    } else if (reg === 'flags' || reg === 'c' || reg === 'z') {
+                                        exps['flags'] = computedVal;
+                                    } else {
+                                        exps[reg] = computedVal;
+                                    }
+                                }
+                            });
+                        }
+                    }
+                    
+                    ['pc', 'op', 'acc', 'b', 'r2', 'r3', 'flags', 'pin'].forEach(r => {
+                        let curVal = "";
+                        if (r === 'flags') curVal = `${cpu.c}, ${cpu.z}`;
+                        else if (r === 'pin') curVal = `0x${cpu.pin_dir} / 0x${cpu.pin_out}`;
+                        else if (cpu[r] !== undefined) curVal = `0x${cpu[r]}`;
+                        
+                        if (!exps[r]) exps[r] = curVal;
+                    });
+                    
+                    // Verify previous expectations
+                    let hasError = false;
+                    if (previousExps[id] && previousPcs[id] !== cpu.pc) {
+                        let p = previousExps[id];
+                        let curVals = {
+                            acc: "0x" + cpu.acc,
+                            b: "0x" + cpu.b,
+                            r2: "0x" + cpu.r2,
+                            r3: "0x" + cpu.r3,
+                            flags: `${cpu.c}, ${cpu.z}`,
+                            pin: `0x${cpu.pin_dir} / 0x${cpu.pin_out}`
+                        };
+                        
+                        for (let r in curVals) {
+                            if (!p[r]) continue;
+                            const el = document.getElementById(`${r}-${id}`);
+                            if (el) {
+                                // Default reset
+                                if (r === 'flags') el.style.color = '#f472b6'; // pink
+                                else el.style.color = '#38bdf8'; // blue
+                            }
+                            
+                            if (p[r] !== curVals[r]) {
+                                hasError = true;
+                                // Wait for DOM to render the new state, then color it yellow
+                                setTimeout(() => {
+                                    const el = document.getElementById(`${r}-${id}`);
+                                    if (el) {
+                                        el.style.color = '#facc15'; // yellow
+                                        el.style.fontWeight = '900';
+                                    }
+                                }, 10);
+                            }
+                        }
+                    }
+                    
+                    if (hasError && document.getElementById('chk-stop-on-error').checked) {
+                        isVerifyPlaying = false;
+                        document.getElementById('playBtn').innerText = 'Play (C)';
+                    }
+                    
+                    previousExps[id] = exps;
+                    previousPcs[id] = cpu.pc;
+                    
+                    ['pc', 'op', 'acc', 'b', 'r2', 'r3', 'flags', 'pin'].forEach(r => {
+                        const el = document.getElementById(`exp-${r}-${id}`);
+                        if (el) {
+                            el.innerText = '→ ' + exps[r];
+                            let curVal = "";
+                            if (r === 'flags') curVal = `${cpu.c}, ${cpu.z}`;
+                            else if (r === 'pin') curVal = `0x${cpu.pin_dir} / 0x${cpu.pin_out}`;
+                            else if (cpu[r] !== undefined) curVal = `0x${cpu[r]}`;
+                            
+                            if (exps[r] && exps[r] !== curVal) {
+                                el.style.color = '#a78bfa'; // purple to show it will change
+                                el.style.fontWeight = 'bold';
+                            } else {
+                                el.style.color = 'var(--text-muted)';
+                                el.style.fontWeight = 'normal';
+                            }
+                        }
+                    });
+                }
             }
         }
 
@@ -376,6 +537,7 @@
         document.addEventListener('keydown', (e) => {
             if (e.key === 's' || e.key === 'S') sendCommand('step');
             if (e.key === 'c' || e.key === 'C') sendCommand('play');
+            if (e.key === 'r' || e.key === 'R') loadTb(document.getElementById('tbSelect').value);
         });
     </script>
 </body>

@@ -22,8 +22,8 @@ module decoder (
     // MSB = 0 means 1-nibble. 
     // MSB = 1 means 2 or 3 nibbles.
     assign is_1_nibble = (opcode[3] == 1'b0);
-    assign is_2_nibble = (opcode[3] == 1'b1) && (opcode < 4'hD);
-    assign is_3_nibble = (opcode[3] == 1'b1) && (opcode >= 4'hD);
+    assign is_2_nibble = (opcode[3] == 1'b1) && (opcode < 4'hD) && (opcode != 4'hA);
+    assign is_3_nibble = (opcode[3] == 1'b1) && ((opcode >= 4'hD) || (opcode == 4'hA));
 
     // --------------------------------------------------------
     // Operation Type Decoder

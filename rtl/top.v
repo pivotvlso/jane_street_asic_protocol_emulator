@@ -15,8 +15,6 @@ module top (
     wire spi_sclk = ui_in[1];
     wire spi_mosi = ui_in[2];
     wire spi_miso;
-    wire ext_irq  = ui_in[4];
-    
     assign uo_out[0] = spi_miso;
 
     // ========================================================
@@ -25,19 +23,19 @@ module top (
     wire [6:0] cpu0_ram_waddr; wire [3:0] cpu0_ram_wdata; wire cpu0_ram_we;
     wire [7:0] cpu0_rx_fifo_wdata; wire cpu0_rx_fifo_we;
     wire [7:0] cpu0_tx_fifo_rdata; wire cpu0_tx_fifo_re; wire cpu0_tx_fifo_empty;
-    wire cpu0_run;
+    wire cpu0_run = ui_in[4];
     wire [6:0] cpu1_ram_waddr; wire [3:0] cpu1_ram_wdata; wire cpu1_ram_we;
     wire [7:0] cpu1_rx_fifo_wdata; wire cpu1_rx_fifo_we;
     wire [7:0] cpu1_tx_fifo_rdata; wire cpu1_tx_fifo_re; wire cpu1_tx_fifo_empty;
-    wire cpu1_run;
+    wire cpu1_run = ui_in[5];
     wire [6:0] cpu2_ram_waddr; wire [3:0] cpu2_ram_wdata; wire cpu2_ram_we;
     wire [7:0] cpu2_rx_fifo_wdata; wire cpu2_rx_fifo_we;
     wire [7:0] cpu2_tx_fifo_rdata; wire cpu2_tx_fifo_re; wire cpu2_tx_fifo_empty;
-    wire cpu2_run;
+    wire cpu2_run = ui_in[6];
     wire [6:0] cpu3_ram_waddr; wire [3:0] cpu3_ram_wdata; wire cpu3_ram_we;
     wire [7:0] cpu3_rx_fifo_wdata; wire cpu3_rx_fifo_we;
     wire [7:0] cpu3_tx_fifo_rdata; wire cpu3_tx_fifo_re; wire cpu3_tx_fifo_empty;
-    wire cpu3_run;
+    wire cpu3_run = ui_in[7];
 
     spi_slave spi_inst (
         .clk(clk), .rst_n(rst_n),
@@ -46,20 +44,43 @@ module top (
         .cpu0_ram_addr(cpu0_ram_waddr), .cpu0_ram_wdata(cpu0_ram_wdata), .cpu0_ram_we(cpu0_ram_we),
         .cpu0_rx_fifo_wdata(cpu0_rx_fifo_wdata), .cpu0_rx_fifo_we(cpu0_rx_fifo_we),
         .cpu0_tx_fifo_rdata(cpu0_tx_fifo_rdata), .cpu0_tx_fifo_re(cpu0_tx_fifo_re),
-        .cpu0_tx_fifo_empty(cpu0_tx_fifo_empty), .cpu0_run(cpu0_run),
+        .cpu0_tx_fifo_empty(cpu0_tx_fifo_empty),
         .cpu1_ram_addr(cpu1_ram_waddr), .cpu1_ram_wdata(cpu1_ram_wdata), .cpu1_ram_we(cpu1_ram_we),
         .cpu1_rx_fifo_wdata(cpu1_rx_fifo_wdata), .cpu1_rx_fifo_we(cpu1_rx_fifo_we),
         .cpu1_tx_fifo_rdata(cpu1_tx_fifo_rdata), .cpu1_tx_fifo_re(cpu1_tx_fifo_re),
-        .cpu1_tx_fifo_empty(cpu1_tx_fifo_empty), .cpu1_run(cpu1_run),
+        .cpu1_tx_fifo_empty(cpu1_tx_fifo_empty),
         .cpu2_ram_addr(cpu2_ram_waddr), .cpu2_ram_wdata(cpu2_ram_wdata), .cpu2_ram_we(cpu2_ram_we),
         .cpu2_rx_fifo_wdata(cpu2_rx_fifo_wdata), .cpu2_rx_fifo_we(cpu2_rx_fifo_we),
         .cpu2_tx_fifo_rdata(cpu2_tx_fifo_rdata), .cpu2_tx_fifo_re(cpu2_tx_fifo_re),
-        .cpu2_tx_fifo_empty(cpu2_tx_fifo_empty), .cpu2_run(cpu2_run),
+        .cpu2_tx_fifo_empty(cpu2_tx_fifo_empty),
         .cpu3_ram_addr(cpu3_ram_waddr), .cpu3_ram_wdata(cpu3_ram_wdata), .cpu3_ram_we(cpu3_ram_we),
         .cpu3_rx_fifo_wdata(cpu3_rx_fifo_wdata), .cpu3_rx_fifo_we(cpu3_rx_fifo_we),
         .cpu3_tx_fifo_rdata(cpu3_tx_fifo_rdata), .cpu3_tx_fifo_re(cpu3_tx_fifo_re),
-        .cpu3_tx_fifo_empty(cpu3_tx_fifo_empty), .cpu3_run(cpu3_run)
+        .cpu3_tx_fifo_empty(cpu3_tx_fifo_empty)
     );
+
+    // ========================================================
+    // SHARED REGISTERS (0x9 and 0xA)
+    // ========================================================
+    reg [7:0] shared_reg_0;
+    reg [7:0] shared_reg_1;
+
+    always @(posedge clk) begin
+        if (!rst_n) begin
+            shared_reg_0 <= 0;
+            shared_reg_1 <= 0;
+        end else begin
+            if (cpu0_mem_we && cpu0_mem_addr == 4'h9) shared_reg_0 <= cpu0_mem_wdata;
+            if (cpu1_mem_we && cpu1_mem_addr == 4'h9) shared_reg_0 <= cpu1_mem_wdata;
+            if (cpu2_mem_we && cpu2_mem_addr == 4'h9) shared_reg_0 <= cpu2_mem_wdata;
+            if (cpu3_mem_we && cpu3_mem_addr == 4'h9) shared_reg_0 <= cpu3_mem_wdata;
+
+            if (cpu0_mem_we && cpu0_mem_addr == 4'hA) shared_reg_1 <= cpu0_mem_wdata;
+            if (cpu1_mem_we && cpu1_mem_addr == 4'hA) shared_reg_1 <= cpu1_mem_wdata;
+            if (cpu2_mem_we && cpu2_mem_addr == 4'hA) shared_reg_1 <= cpu2_mem_wdata;
+            if (cpu3_mem_we && cpu3_mem_addr == 4'hA) shared_reg_1 <= cpu3_mem_wdata;
+        end
+    end
 
     // ========================================================
     // CPU 0 SUBSYSTEM
@@ -94,18 +115,18 @@ module top (
 
     always @(*) begin
         cpu0_mem_rdata = 8'h00;
-        if (cpu0_mem_addr == 4'h5) cpu0_mem_rdata = cpu0_rx_rdata;
+        if (cpu0_mem_addr == 4'h5) cpu0_mem_rdata = cpu0_rx_empty ? 8'h00 : cpu0_rx_rdata;
         else if (cpu0_mem_addr == 4'h6) cpu0_mem_rdata = {4'b0, uio_in[3:0]};
         else if (cpu0_mem_addr == 4'h7) cpu0_mem_rdata = cpu0_timer_rdata;
+        else if (cpu0_mem_addr == 4'h9) cpu0_mem_rdata = shared_reg_0;
+        else if (cpu0_mem_addr == 4'hA) cpu0_mem_rdata = shared_reg_1;
     end
     
-    assign cpu0_mem_stall = ((cpu0_mem_addr == 4'h5) && cpu0_mem_re && cpu0_rx_empty) ||
-                            ((cpu0_mem_addr == 4'h4) && cpu0_mem_we && cpu0_tx_full) ||
-                            ((cpu0_mem_addr == 4'h7) && cpu0_mem_re && !cpu0_timer_zero);
+    assign cpu0_mem_stall = 1'b0;
 
     cpu_core core0 (
-        .clk(clk), .rst_n(rst_n), .run(cpu0_run), .irq(ext_irq),
-        .pin_out(cpu0_pin_out), .pin_dir(cpu0_pin_dir),
+        .clk(clk), .rst_n(rst_n), .run(cpu0_run),
+        .pin_state(uio_in[3:0]), .pin_out(cpu0_pin_out), .pin_dir(cpu0_pin_dir),
         .rom_addr(cpu0_pc_addr), .rom_data(cpu0_rom_data),
         .mem_addr(cpu0_mem_addr), .mem_wdata(cpu0_mem_wdata), .mem_we(cpu0_mem_we), .mem_re(cpu0_mem_re),
         .mem_rdata(cpu0_mem_rdata), .mem_stall(cpu0_mem_stall)
@@ -113,7 +134,7 @@ module top (
     
     always @(posedge clk) begin
         if (cpu0_run && core0.state == 3'd4) begin
-            $display("DBG|0|%0t|%h|%h|%h|%h|%h|%h|%h|%h|%h|%h|%h|%h|%h", $time, core0.pc, core0.curr_opcode, core0.acc, core0.b_reg, core0.r_regs[2], core0.r_regs[3], core0.r_regs[4], core0.r_regs[8], core0.flag_carry, core0.flag_zero, core0.pin_dir, core0.pin_out);
+            $display("DBG|0|%0t|%h|%h|%h|%h|%h|%h|%h|%h|%h|%h|%h|%h|%h", $time, core0.exec_pc, core0.curr_opcode, core0.acc, core0.b_reg, core0.r_regs[2], core0.r_regs[3], core0.r_regs[4], core0.r_regs[8], core0.flag_carry, core0.flag_zero, core0.pin_dir, core0.pin_out, 8'h0);
         end
     end
 
@@ -155,18 +176,18 @@ module top (
 
     always @(*) begin
         cpu1_mem_rdata = 8'h00;
-        if (cpu1_mem_addr == 4'h5) cpu1_mem_rdata = cpu1_rx_rdata;
+        if (cpu1_mem_addr == 4'h5) cpu1_mem_rdata = cpu1_rx_empty ? 8'h00 : cpu1_rx_rdata;
         else if (cpu1_mem_addr == 4'h6) cpu1_mem_rdata = {4'b0, uio_in[3:0]};
         else if (cpu1_mem_addr == 4'h7) cpu1_mem_rdata = cpu1_timer_rdata;
+        else if (cpu1_mem_addr == 4'h9) cpu1_mem_rdata = shared_reg_0;
+        else if (cpu1_mem_addr == 4'hA) cpu1_mem_rdata = shared_reg_1;
     end
     
-    assign cpu1_mem_stall = ((cpu1_mem_addr == 4'h5) && cpu1_mem_re && cpu1_rx_empty) ||
-                            ((cpu1_mem_addr == 4'h4) && cpu1_mem_we && cpu1_tx_full) ||
-                            ((cpu1_mem_addr == 4'h7) && cpu1_mem_re && !cpu1_timer_zero);
+    assign cpu1_mem_stall = 1'b0;
 
     cpu_core core1 (
-        .clk(clk), .rst_n(rst_n), .run(cpu1_run), .irq(ext_irq),
-        .pin_out(cpu1_pin_out), .pin_dir(cpu1_pin_dir),
+        .clk(clk), .rst_n(rst_n), .run(cpu1_run),
+        .pin_state(uio_in[7:4]), .pin_out(cpu1_pin_out), .pin_dir(cpu1_pin_dir),
         .rom_addr(cpu1_pc_addr), .rom_data(cpu1_rom_data),
         .mem_addr(cpu1_mem_addr), .mem_wdata(cpu1_mem_wdata), .mem_we(cpu1_mem_we), .mem_re(cpu1_mem_re),
         .mem_rdata(cpu1_mem_rdata), .mem_stall(cpu1_mem_stall)
@@ -174,7 +195,7 @@ module top (
 
     always @(posedge clk) begin
         if (cpu1_run && core1.state == 3'd4) begin
-            $display("DBG|1|%0t|%h|%h|%h|%h|%h|%h|%h|%h|%h|%h|%h|%h|%h", $time, core1.pc, core1.curr_opcode, core1.acc, core1.b_reg, core1.r_regs[2], core1.r_regs[3], core1.r_regs[4], core1.r_regs[8], core1.flag_carry, core1.flag_zero, core1.pin_dir, core1.pin_out);
+            $display("DBG|1|%0t|%h|%h|%h|%h|%h|%h|%h|%h|%h|%h|%h|%h|%h", $time, core1.exec_pc, core1.curr_opcode, core1.acc, core1.b_reg, core1.r_regs[2], core1.r_regs[3], core1.r_regs[4], core1.r_regs[8], core1.flag_carry, core1.flag_zero, core1.pin_dir, core1.pin_out, 8'h0);
         end
     end
 
@@ -212,18 +233,18 @@ module top (
 
     always @(*) begin
         cpu2_mem_rdata = 8'h00;
-        if (cpu2_mem_addr == 4'h5) cpu2_mem_rdata = cpu2_rx_rdata;
+        if (cpu2_mem_addr == 4'h5) cpu2_mem_rdata = cpu2_rx_empty ? 8'h00 : cpu2_rx_rdata;
         else if (cpu2_mem_addr == 4'h6) cpu2_mem_rdata = {4'b0, uio_in[3:0]};
         else if (cpu2_mem_addr == 4'h7) cpu2_mem_rdata = cpu2_timer_rdata;
+        else if (cpu2_mem_addr == 4'h9) cpu2_mem_rdata = shared_reg_0;
+        else if (cpu2_mem_addr == 4'hA) cpu2_mem_rdata = shared_reg_1;
     end
     
-    assign cpu2_mem_stall = ((cpu2_mem_addr == 4'h5) && cpu2_mem_re && cpu2_rx_empty) ||
-                            ((cpu2_mem_addr == 4'h4) && cpu2_mem_we && cpu2_tx_full) ||
-                            ((cpu2_mem_addr == 4'h7) && cpu2_mem_re && !cpu2_timer_zero);
+    assign cpu2_mem_stall = 1'b0;
 
     cpu_core core2 (
-        .clk(clk), .rst_n(rst_n), .run(cpu2_run), .irq(ext_irq),
-        .pin_out(cpu2_pin_out), .pin_dir(cpu2_pin_dir),
+        .clk(clk), .rst_n(rst_n), .run(cpu2_run),
+        .pin_state(ui_in[3:0]), .pin_out(cpu2_pin_out), .pin_dir(cpu2_pin_dir),
         .rom_addr(cpu2_pc_addr), .rom_data(cpu2_rom_data),
         .mem_addr(cpu2_mem_addr), .mem_wdata(cpu2_mem_wdata), .mem_we(cpu2_mem_we), .mem_re(cpu2_mem_re),
         .mem_rdata(cpu2_mem_rdata), .mem_stall(cpu2_mem_stall)
@@ -263,18 +284,18 @@ module top (
 
     always @(*) begin
         cpu3_mem_rdata = 8'h00;
-        if (cpu3_mem_addr == 4'h5) cpu3_mem_rdata = cpu3_rx_rdata;
+        if (cpu3_mem_addr == 4'h5) cpu3_mem_rdata = cpu3_rx_empty ? 8'h00 : cpu3_rx_rdata;
         else if (cpu3_mem_addr == 4'h6) cpu3_mem_rdata = {4'b0, uio_in[3:0]};
         else if (cpu3_mem_addr == 4'h7) cpu3_mem_rdata = cpu3_timer_rdata;
+        else if (cpu3_mem_addr == 4'h9) cpu3_mem_rdata = shared_reg_0;
+        else if (cpu3_mem_addr == 4'hA) cpu3_mem_rdata = shared_reg_1;
     end
     
-    assign cpu3_mem_stall = ((cpu3_mem_addr == 4'h5) && cpu3_mem_re && cpu3_rx_empty) ||
-                            ((cpu3_mem_addr == 4'h4) && cpu3_mem_we && cpu3_tx_full) ||
-                            ((cpu3_mem_addr == 4'h7) && cpu3_mem_re && !cpu3_timer_zero);
+    assign cpu3_mem_stall = 1'b0;
 
     cpu_core core3 (
-        .clk(clk), .rst_n(rst_n), .run(cpu3_run), .irq(ext_irq),
-        .pin_out(cpu3_pin_out), .pin_dir(cpu3_pin_dir),
+        .clk(clk), .rst_n(rst_n), .run(cpu3_run),
+        .pin_state(ui_in[7:4]), .pin_out(cpu3_pin_out), .pin_dir(cpu3_pin_dir),
         .rom_addr(cpu3_pc_addr), .rom_data(cpu3_rom_data),
         .mem_addr(cpu3_mem_addr), .mem_wdata(cpu3_mem_wdata), .mem_we(cpu3_mem_we), .mem_re(cpu3_mem_re),
         .mem_rdata(cpu3_mem_rdata), .mem_stall(cpu3_mem_stall)

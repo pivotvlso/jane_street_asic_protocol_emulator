@@ -36,13 +36,20 @@
           <mxGeometry x="540" y="520" width="160" height="180" as="geometry" />
         </mxCell>
 
+        <!-- Shared Registers -->
+        <mxCell id="shared_regs" value="SHARED REGISTERS&#10;(SHARED_0, SHARED_1)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="370" y="460" width="160" height="60" as="geometry" />
+        </mxCell>
+
         <!-- ALL 8 UI_IN PINS (Left side) -->
         <mxCell id="in0" value="ui_in[0]: CS" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;" vertex="1" parent="1"><mxGeometry x="20" y="150" width="90" height="30" as="geometry" /></mxCell>
         <mxCell id="in1" value="ui_in[1]: SCLK" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;" vertex="1" parent="1"><mxGeometry x="20" y="190" width="90" height="30" as="geometry" /></mxCell>
         <mxCell id="in2" value="ui_in[2]: MOSI" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;" vertex="1" parent="1"><mxGeometry x="20" y="230" width="90" height="30" as="geometry" /></mxCell>
-        <mxCell id="in3" value="ui_in[3]: RUN" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;" vertex="1" parent="1"><mxGeometry x="20" y="270" width="90" height="30" as="geometry" /></mxCell>
-
-
+        <mxCell id="in3" value="ui_in[3]: Unused" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;" vertex="1" parent="1"><mxGeometry x="20" y="270" width="100" height="30" as="geometry" /></mxCell>
+        <mxCell id="in4" value="ui_in[4]: RUN0" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;" vertex="1" parent="1"><mxGeometry x="20" y="310" width="100" height="30" as="geometry" /></mxCell>
+        <mxCell id="in5" value="ui_in[5]: RUN1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;" vertex="1" parent="1"><mxGeometry x="20" y="350" width="100" height="30" as="geometry" /></mxCell>
+        <mxCell id="in6" value="ui_in[6]: RUN2" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;" vertex="1" parent="1"><mxGeometry x="20" y="390" width="100" height="30" as="geometry" /></mxCell>
+        <mxCell id="in7" value="ui_in[7]: RUN3" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;" vertex="1" parent="1"><mxGeometry x="20" y="430" width="100" height="30" as="geometry" /></mxCell>
         <!-- ALL 8 UO_OUT PINS (Right side) -->
         <mxCell id="out0" value="uo_out[0]: MISO" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;" vertex="1" parent="1"><mxGeometry x="800" y="150" width="100" height="30" as="geometry" /></mxCell>
 
@@ -63,8 +70,10 @@
         <mxCell id="e_out0" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" parent="1" source="inst_ram" target="out0"><mxGeometry relative="1" as="geometry" /></mxCell>
 
         <!-- Edges: GP Inputs to PDATA -->
-
-
+        <mxCell id="e_run0" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" parent="1" source="in4" target="pdata_cpu"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_run1" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" parent="1" source="in5" target="pdir_cpu"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_run2" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" parent="1" source="in6" target="cpu2"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_run3" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" parent="1" source="in7" target="cpu3"><mxGeometry relative="1" as="geometry" /></mxCell>
         <!-- Edges: PDATA to GP Outputs -->
 
 

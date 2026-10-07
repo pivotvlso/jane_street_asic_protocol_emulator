@@ -19,7 +19,6 @@ module spi_slave (
     input  wire [7:0] cpu0_tx_fifo_rdata,
     output reg        cpu0_tx_fifo_re,
     input  wire       cpu0_tx_fifo_empty,
-    output reg        cpu0_run,
     // Interfaces to CPU 1
     output reg [6:0]  cpu1_ram_addr,
     output reg [3:0]  cpu1_ram_wdata,
@@ -29,7 +28,6 @@ module spi_slave (
     input  wire [7:0] cpu1_tx_fifo_rdata,
     output reg        cpu1_tx_fifo_re,
     input  wire       cpu1_tx_fifo_empty,
-    output reg        cpu1_run,
     // Interfaces to CPU 2
     output reg [6:0]  cpu2_ram_addr,
     output reg [3:0]  cpu2_ram_wdata,
@@ -39,7 +37,6 @@ module spi_slave (
     input  wire [7:0] cpu2_tx_fifo_rdata,
     output reg        cpu2_tx_fifo_re,
     input  wire       cpu2_tx_fifo_empty,
-    output reg        cpu2_run,
     // Interfaces to CPU 3
     output reg [6:0]  cpu3_ram_addr,
     output reg [3:0]  cpu3_ram_wdata,
@@ -48,8 +45,7 @@ module spi_slave (
     output reg        cpu3_rx_fifo_we,
     input  wire [7:0] cpu3_tx_fifo_rdata,
     output reg        cpu3_tx_fifo_re,
-    input  wire       cpu3_tx_fifo_empty,
-    output reg        cpu3_run
+    input  wire       cpu3_tx_fifo_empty
 );
 
     // SPI SCLK Edge Detection
@@ -79,22 +75,18 @@ module spi_slave (
             cpu0_ram_we <= 0;
             cpu0_rx_fifo_we <= 0;
             cpu0_tx_fifo_re <= 0;
-            cpu0_run <= 0;
             cpu1_ram_addr <= 0;
             cpu1_ram_we <= 0;
             cpu1_rx_fifo_we <= 0;
             cpu1_tx_fifo_re <= 0;
-            cpu1_run <= 0;
             cpu2_ram_addr <= 0;
             cpu2_ram_we <= 0;
             cpu2_rx_fifo_we <= 0;
             cpu2_tx_fifo_re <= 0;
-            cpu2_run <= 0;
             cpu3_ram_addr <= 0;
             cpu3_ram_we <= 0;
             cpu3_rx_fifo_we <= 0;
             cpu3_tx_fifo_re <= 0;
-            cpu3_run <= 0;
         end else begin
             // Clear single-cycle strobes
             cpu0_ram_we <= 0;
@@ -128,16 +120,6 @@ module spi_slave (
                             cpu1_ram_addr <= 7'h7F;
                             cpu2_ram_addr <= 7'h7F;
                             cpu3_ram_addr <= 7'h7F;
-                            
-                            // Commands
-                            if ({shift_reg[6:0], spi_mosi} == 8'h06) cpu0_run <= 1;
-                            if ({shift_reg[6:0], spi_mosi} == 8'h08) cpu0_run <= 0;
-                            if ({shift_reg[6:0], spi_mosi} == 8'h07) cpu1_run <= 1;
-                            if ({shift_reg[6:0], spi_mosi} == 8'h09) cpu1_run <= 0;
-                            if ({shift_reg[6:0], spi_mosi} == 8'h0E) cpu2_run <= 1;
-                            if ({shift_reg[6:0], spi_mosi} == 8'h1E) cpu2_run <= 0;
-                            if ({shift_reg[6:0], spi_mosi} == 8'h0F) cpu3_run <= 1;
-                            if ({shift_reg[6:0], spi_mosi} == 8'h1F) cpu3_run <= 0;
                         end else begin
                             case (cmd_byte)
                                 8'h00: begin // Write CPU0 RAM

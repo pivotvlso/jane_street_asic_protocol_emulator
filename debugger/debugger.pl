@@ -92,6 +92,12 @@ sub run_tb {
                 if (-e $asm_file) {
                     $cpu_asm_files{$cpu_id} = $asm_file;
                 }
+            } elsif ($line =~ /\$readmemh\s*\(\s*"([^"]+)\.hex"\s*,\s*dut\.cpu([0-3])_ram\s*\)/) {
+                my $asm_file = "$1.asm";
+                my $cpu_id = $2;
+                if (-e $asm_file) {
+                    $cpu_asm_files{$cpu_id} = $asm_file;
+                }
             }
         }
         close $tb_fh;

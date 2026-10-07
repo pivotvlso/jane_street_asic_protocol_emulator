@@ -69,3 +69,11 @@ The ASIC utilizes small, 8-byte hardware FIFOs to buffer data between the SPI Ho
 ## 15. Silicon Errata: Register Address 0x9 is Unmapped
 * **Limitation:** In the CPU core (`cpu_core.v`), internal registers are decoded using `(addr <= 4'h3) || (addr == 4'h8) || (addr >= 4'hA)`. Address `0x9` (which the assembler maps to `R4`) falls in a gap. It is neither treated as an internal register nor mapped to any external hardware peripheral.
 * **Impact:** Any `STORE 9` command writes to an external void, and any `LOAD 9` command reads from an unmapped external memory space (which safely defaults to `0x00`). Firmware developers MUST completely avoid using `R4` (`0x9`) as it acts as a black hole and will silently corrupt data if used as a general-purpose register.
+
+## 16. 10BASE-T Ethernet Limitations
+* **Limitation:** Ethernet requires 10 Mbps Manchester encoding and precise differential signaling.
+* **Impact:**
+  - **TX Only (Half-Duplex):** To achieve zero differential skew across TX+ and TX-, all 4 CPUs must be utilized simultaneously (Serializer -> Encoder -> TX+ / TX-). This leaves no CPUs available for listening, meaning the emulator cannot receive (RX) Ethernet packets while configured for TX.
+  - **Deterministic Jitter:** A 50ns half-bit transition equals 2.5 clock cycles at 50MHz. Because CPUs cannot delay for fractional cycles, the encoder alternates between 2 and 3 cycles (40ns and 60ns), introducing ±10ns of jitter (within the ±11ns IEEE 802.3 tolerance, but not perfect).
+  - **Software CRC32 Impossible:** Calculating the 32-bit Frame Check Sequence (FCS) exceeds the 128-nibble instruction limit. The Host RP2040 must pre-calculate the CRC32 and append it to the raw frame payload before streaming it to the ASIC.
+  - **Link Pulses:** Normal Link Pulses (NLP) required every 16ms must be manually triggered by the Host RP2040 to keep the physical link alive during idle periods.

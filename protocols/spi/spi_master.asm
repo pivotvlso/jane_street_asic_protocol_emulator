@@ -5,19 +5,19 @@
 // ==========================================
 
 START:
-    LOAD RX_FIFO       // [2 Nibbles] Block until Host sends data
-    STORE R2           // [2 Nibbles] R2 = Data to send
+    LOAD RX_FIFO       // [2 Nibbles] Block until Host sends data // [EXPECT: ACC=RX_FIFO]
+    STORE R2           // [2 Nibbles] R2 = Data to send // [EXPECT: R2=ACC]
     
-    LOADI 8
-    STORE R4           // [2 Nibbles] R4 = Bit counter (8)
+    LOADI 8 // [EXPECT: ACC=8]
+    STORE R4           // [2 Nibbles] R4 = Bit counter (8) // [EXPECT: R4=ACC]
 
 BIT_LOOP:
     // --------------------------------------
     // 1. SET MOSI (Pin 0) - MSB First
     // --------------------------------------
-    LOAD R2
-    SHL                // Shift left. MSB goes into Carry Flag (Bit 1)
-    STORE R2
+    LOAD R2 // [EXPECT: ACC=R2]
+    SHL                // Shift left. MSB goes into Carry Flag (Bit 1) // [EXPECT: ACC=ACC<<1]
+    STORE R2 // [EXPECT: R2=ACC]
     
     JMPC SEND_ONE      // [3]
     
@@ -46,11 +46,11 @@ CLOCK_PULSE:
     // --------------------------------------
     // 4. DECREMENT LOOP
     // --------------------------------------
-    LOAD R4
-    LOADI 1
-    STORE B
-    SUB
-    STORE R4
+    LOAD R4 // [EXPECT: ACC=R4]
+    LOADI 1 // [EXPECT: ACC=1]
+    STORE B // [EXPECT: B=ACC]
+    SUB // [EXPECT: ACC=ACC-B]
+    STORE R4 // [EXPECT: R4=ACC]
     
     JMPNZ BIT_LOOP     // [3]
     
