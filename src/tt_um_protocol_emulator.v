@@ -15,23 +15,23 @@ module tt_um_protocol_emulator (
     wire spi_cs   = ui_in[0];
     wire spi_sclk = ui_in[1];
     wire spi_mosi = ui_in[2];
-    wire spi_miso;
+    wire spi_miso = 1'b0;
     assign uo_out[0] = spi_miso;
 
     // ========================================================
     // SPI SLAVE 
     // ========================================================
 
-    wire [7:0] cpu0_rx_fifo_wdata; wire cpu0_rx_fifo_we;
+    wire [7:0] cpu0_rx_fifo_wdata = 8'h00; wire cpu0_rx_fifo_we = 1'b0;
     wire [7:0] cpu0_tx_fifo_rdata; wire cpu0_tx_fifo_re; wire cpu0_tx_fifo_empty;
     wire cpu0_run = ui_in[4];
-    wire [7:0] cpu1_rx_fifo_wdata; wire cpu1_rx_fifo_we;
+    wire [7:0] cpu1_rx_fifo_wdata = 8'h00; wire cpu1_rx_fifo_we = 1'b0;
     wire [7:0] cpu1_tx_fifo_rdata; wire cpu1_tx_fifo_re; wire cpu1_tx_fifo_empty;
     wire cpu1_run = ui_in[5];
-    wire [7:0] cpu2_rx_fifo_wdata; wire cpu2_rx_fifo_we;
+    wire [7:0] cpu2_rx_fifo_wdata = 8'h00; wire cpu2_rx_fifo_we = 1'b0;
     wire [7:0] cpu2_tx_fifo_rdata; wire cpu2_tx_fifo_re; wire cpu2_tx_fifo_empty;
     wire cpu2_run = ui_in[6];
-    wire [7:0] cpu3_rx_fifo_wdata; wire cpu3_rx_fifo_we;
+    wire [7:0] cpu3_rx_fifo_wdata = 8'h00; wire cpu3_rx_fifo_we = 1'b0;
     wire [7:0] cpu3_tx_fifo_rdata; wire cpu3_tx_fifo_re; wire cpu3_tx_fifo_empty;
     wire cpu3_run = ui_in[7];
 
