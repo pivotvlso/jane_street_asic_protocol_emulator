@@ -4,7 +4,6 @@
 *.vcd
 *.out
 a.out
-generate_assertions.pl
 *_assert.vh
 scratch/
 verif_output/
