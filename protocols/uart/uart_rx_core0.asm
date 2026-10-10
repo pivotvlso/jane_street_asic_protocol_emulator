@@ -65,4 +65,15 @@ WAIT_ACK:
     STORE TIMER_L
     LOAD TIMER_L       // Hardware stall until timer is 0!
     
+    // Verify Stop Bit is HIGH
+    LOADIB 2
+    LOAD PIN_STATE
+    AND B
+    JMPNZ END_BYTE     // If HIGH (0x2), it's a valid stop bit
+    
+    // FRAMING ERROR! Pin is LOW instead of HIGH!
+    LOADI 0xFF
+    STORE TX_FIFO      // Push 0xFF to Core 0's TX FIFO
+    
+END_BYTE:
     JMP START          // Done! Back to waiting for next byte

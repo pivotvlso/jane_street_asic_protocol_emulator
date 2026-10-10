@@ -2,15 +2,15 @@
 
 While the Quad-Core Accumulator ASIC is highly flexible and robust, it was designed under severe area constraints for the Sky130 130nm PDK (Tiny Tapeout). As a result, several architectural compromises and limitations exist.
 
-## 1. Instruction Execution Overhead
-Because this is a bare-metal, accumulator-based CPU without hardware barrel shifters or complex ALU instructions, simple operations require multiple instructions to execute.
-* **Limitation:** The instruction execution overhead for bit-banging protocols can be massive. For example, in `uart_rx.asm`, the software `BIT_LOOP` requires approximately **39 clock cycles** just to sample, shift, and store a single bit. 
-* **Impact:** The ASIC cannot emulate high-speed baud rates that approach the master clock frequency. The external RP2040 Host MUST calibrate the hardware `TIMER_L` values to mathematically subtract this software instruction overhead when configuring baud rates (e.g., programming a timer delay of `61` to achieve a physical baud rate of `100` cycles/bit).
+## 1. Instruction Execution Overhead (Overcome via Pipelining)
+Because this is a bare-metal, accumulator-based CPU without hardware barrel shifters or complex ALU instructions, single-core execution of complex protocols suffers from massive instruction overhead (e.g., bit shifting takes multiple `SHL` instructions).
+* **Limitation:** In the past, a monolithic `uart_rx.asm` routine required ~39 clock cycles just to sample, shift, and store a single bit. 
+* **Resolution:** This limitation was fundamentally **overcome** by redesigning the firmware to use a multi-core split-stream pipeline. By dedicating CPU 0 purely to high-speed pin sampling, and offloading the heavy bit-shifting mathematics to CPU 1 via the shared memory interconnect, the instruction execution overhead per core is drastically reduced, allowing for significantly higher physical baud rates.
 
 ## 2. No Hardware Interrupts
 The CPUs do not possess hardware interrupt request (IRQ) capabilities or stack pointers.
 * **Limitation:** A CPU cannot pause execution to service an asynchronous event. 
-* **Impact:** Full-Duplex communication (e.g., UART TX and RX simultaneously) cannot be achieved on a single core. It inherently requires allocating two independent CPU cores (one dedicated to polling the RX pin, and one dedicated to transmitting the TX pin).
+* **Impact:** Full-Duplex communication (e.g., UART TX and RX simultaneously) cannot be achieved on a single core. It inherently requires allocating independent CPU cores (e.g., CPU 0/1 for RX polling, and CPU 2 for transmitting).
 
 ## 3. Instruction Memory Constraints
 Because Tiny Tapeout relies on raw D-Flip-Flop (DFF) synthesis for memory rather than dense SRAM macros, RAM is extremely expensive in terms of logic gates.
@@ -22,13 +22,13 @@ The ASIC utilizes small, 8-byte hardware FIFOs to buffer data between the SPI Ho
 * **Limitation:** If the external RP2040 Host does not poll the SPI bus fast enough to drain the `TX_FIFO`, the hardware will assert a `tx_full` flag. If the internal CPU attempts to push more bytes while the FIFO is full, the CPU will stall (if configured to do so) or the hardware will silently drop the incoming writes to prevent memory corruption.
 * **Impact:** The CPU does not currently have a mechanism to generate an "Overrun Error" flag to explicitly alert the Host that data was lost. 
 
-## 5. Single-Core Parity is Unsupported
-* **Limitation:** The UART firmware cannot fit both standard 8-bit reception and software parity calculation on a single core. 
-* **Impact:** Due to the 128-nibble memory limit, parity checking requires complex bitwise XOR/AND loops on the accumulator that overflow the instruction RAM. Supporting Parity (e.g., `8E1`) inherently requires allocating a **second CPU core** to act as a parallel watchdog on the RX pin, purely to count bits and evaluate parity.
+## 5. Parity & Full Duplex Require All 4 Cores
+* **Limitation:** The UART firmware cannot fit both standard 8-bit reception and software parity calculation on a single core due to the 128-nibble memory limit. 
+* **Impact:** Supporting Parity (e.g., `8E1`) inherently requires allocating a dedicated CPU core to act as a parallel watchdog on the RX pin, purely to count bits and evaluate parity. To achieve Full-Duplex UART with Parity, all 4 cores of the ASIC must be utilized simultaneously: CPU 0 (RX Sampler), CPU 1 (RX Shifter), CPU 2 (TX), and CPU 3 (Parity Watchdog). This leaves no CPU cores available for other protocols.
 
 ## 6. Maximum Theoretical Baud Rate
-* **Limitation:** The minimum execution time for a bit-banging loop is approximately 40 clock cycles (39 cycles of instruction overhead + 1 cycle of timer wait).
-* **Impact:** If the Tiny Tapeout ASIC runs at a maximum master clock of **50 MHz**, 40 cycles equals 800ns per bit. Therefore, the absolute maximum UART baud rate the chip can emulate is **~1.25 Mbps**.
+* **Limitation:** The maximum baud rate is dictated by the longest critical path in the split-stream pipeline. Since offloading bit-shifting to background cores, the tightest software polling loops (such as CPU 1's UART sampler) now execute in under 15 clock cycles.
+* **Impact:** If the Tiny Tapeout ASIC runs at a maximum master clock of **50 MHz**, a 15-cycle loop overhead equals 300ns per bit. This effectively triples the maximum theoretical baud rate to roughly **~3.33 Mbps** (up from the monolithic core's 1.25 Mbps limit).
 
 ## 7. No Indirect Memory Addressing (No Pointers)
 * **Limitation:** The ISA only supports direct addressing (`LOAD addr`). There is no support for pointers, indirect addressing (e.g., `LOAD [R2]`), or a Stack Pointer.
@@ -56,7 +56,7 @@ The ASIC utilizes small, 8-byte hardware FIFOs to buffer data between the SPI Ho
 
 ## 13. Complex Inter-Processor Synchronization
 * **Limitation:** When multiple CPUs interact with the same external bus (e.g., CPU 1 extracting UART data and CPU 2 acting as a Parity watchdog on the same wire), there are no hardware synchronization primitives (semaphores, mutexes) between them.
-* **Impact:** Syncing multiple CPUs relies entirely on manual, mathematically precise cycle-counting. If CPU 1's baud delay loop is 62 cycles and CPU 2's parity loop is 50 cycles, the host must manually calibrate their independent `TIMER_L` hardware timers so they remain perfectly phase-aligned over the duration of the transmission.
+* **Impact:** Syncing multiple CPUs relies entirely on manual, mathematically precise cycle-counting. If CPU 0's baud delay loop is 28 cycles and CPU 3's parity loop is 57 cycles, the host must manually calibrate their independent `TIMER_H` / `TIMER_L` hardware timers so they remain perfectly phase-aligned over the duration of the transmission.
 
 ## 14. I2C Protocol Limitations
 * **Limitation:** The current firmware supports standard 8-bit I2C transactions with clock stretching, but lacks advanced features due to architectural constraints.
@@ -66,9 +66,9 @@ The ASIC utilizes small, 8-byte hardware FIFOs to buffer data between the SPI Ho
   - **10-bit Addressing:** Handling 10-bit addressing state machines exceeds the strict 128-nibble memory limit.
   - **High-Speed Mode (3.4 Mbps):** The software bit-banging overhead limits the theoretical maximum speed to ~1.25 Mbps (at 50 MHz), making High-Speed mode physically impossible (Standard and Fast modes are fully supported).
 
-## 15. Silicon Errata: Register Address 0x9 is Unmapped
-* **Limitation:** In the CPU core (`cpu_core.v`), internal registers are decoded using `(addr <= 4'h3) || (addr == 4'h8) || (addr >= 4'hA)`. Address `0x9` (which the assembler maps to `R4`) falls in a gap. It is neither treated as an internal register nor mapped to any external hardware peripheral.
-* **Impact:** Any `STORE 9` command writes to an external void, and any `LOAD 9` command reads from an unmapped external memory space (which safely defaults to `0x00`). Firmware developers MUST completely avoid using `R4` (`0x9`) as it acts as a black hole and will silently corrupt data if used as a general-purpose register.
+## 15. Register Aliasing: R4 and R5 are Globally Shared
+* **Limitation:** In the assembler, the CPU only has four true private internal registers for general use: `ACC`, `B`, `R2`, and `R3`. To provide additional registers, the assembler maps `R4` to memory address `0xB` (`SHARED_2`) and `R5` to memory address `0xC` (`SHARED_3`).
+* **Impact:** Because these memory addresses are globally accessible across all 4 CPUs, `R4` and `R5` are **NOT** private to the executing core. If multiple CPUs attempt to use `R4` as a local loop counter simultaneously, they will overwrite each other's state via the global shared memory and cause data corruption (as they are inadvertently ping-ponging the same physical hardware register). Firmware developers must strictly use `R2` or `R3` for private loops, or mathematically coordinate shared usage of `R4`/`R5` across cores.
 
 ## 16. 10BASE-T Ethernet Limitations
 * **Limitation:** Ethernet requires 10 Mbps Manchester encoding and precise differential signaling.

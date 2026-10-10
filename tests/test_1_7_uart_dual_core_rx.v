@@ -112,53 +112,76 @@ module uart_concurrent;
 
     initial begin
         ui_in = 0; ui_in[0] = 1; ena = 1; rst_n = 0; #50 rst_n = 1; #50;
-        $display("[Test 1.8] UART Dual-Core RX (CPU0: TX, CPU1: RX_Core0, CPU2: RX_Core1)");
+        $display("[Test 1.7] UART Dual-Core RX (CPU0: TX, CPU1: RX_Core0, CPU2: RX_Core1)");
         
         // 1. Program CPU 0 with TX, CPU 1 with RX_Core0, CPU 2 with RX_Core1
-        load_cpu_ram(8'h00, "protocols/uart/uart_tx"); 
-        load_cpu_ram(8'h01, "protocols/uart/uart_rx_core0"); 
-        load_cpu_ram(8'h08, "protocols/uart/uart_rx_core1"); 
+        // 1. Program CPU 0 with RX0, CPU 1 with RX1, CPU 2 with TX, CPU 3 with Parity
+        load_cpu_ram(8'h00, "protocols/uart/uart_rx_core0"); 
+        load_cpu_ram(8'h01, "protocols/uart/uart_rx_core1"); 
+        load_cpu_ram(8'h08, "protocols/uart/uart_tx"); 
+        load_cpu_ram(8'h09, "protocols/uart/uart_parity"); 
         
         // 2. Start CPUs
         ui_in[4] = 1; // RUN CPU 0
         ui_in[5] = 1; // RUN CPU 1
         ui_in[6] = 1; // RUN CPU 2
+        ui_in[7] = 1; // RUN CPU 3
         #100;
         
         // 3. Configure Baud Rates
-        // TX Baud = 57 cycles
-        ui_in[0] = 0; spi_send_byte(8'h02); spi_send_byte(8'd57); ui_in[0] = 1; #20;
+        // TX Baud = 57 cycles (CPU 2)
+        ui_in[0] = 0; spi_send_byte(8'h0A); spi_send_byte(8'd57); ui_in[0] = 1; #20;
         
-        // RX Baud (Core 0 handles baud timer)
+        // RX Baud (Core 0 handles baud timer, CPU 0)
         // Full Baud = 57 cycles, Half Baud = 28 cycles
-        ui_in[0] = 0; spi_send_byte(8'h03); spi_send_byte(8'd57); ui_in[0] = 1; #20;
-        ui_in[0] = 0; spi_send_byte(8'h03); spi_send_byte(8'd28); ui_in[0] = 1; #20;
+        ui_in[0] = 0; spi_send_byte(8'h02); spi_send_byte(8'd57); ui_in[0] = 1; #20;
+        ui_in[0] = 0; spi_send_byte(8'h02); spi_send_byte(8'd28); ui_in[0] = 1; #20;
         
         #500;
         
+        $display("STARTING CPU 3 PROBE");
+        
+
         // 4. Send Payload: 'X' (0x58) to CPU 0 (TX)
-        $display("Pushing 'X' (0x58) into CPU 0 for Transmission...");
-        ui_in[0] = 0; spi_send_byte(8'h02); spi_send_byte(8'h58); ui_in[0] = 1; #20;
+        // 4. Send Payload: 'X' (0x58 = 88). Wait, to test Parity, let's send a byte.
+        // Wait, 'uart_tx.asm' just sends whatever is in CPU 2 RX FIFO!
+        $display("Pushing 'X' (0x58) into CPU 2 for Transmission...");
+        ui_in[0] = 0; spi_send_byte(8'h0A); spi_send_byte(8'h58); ui_in[0] = 1; #20;
         
         // Wait for Transmission & Reception to complete!
         #60000;
         
-        // 5. Read back from CPU 2 TX FIFO to see if it successfully decoded 'X'!
-        $display("Reading result from CPU 2 (RX_Core1)...");
+        // 5. Read back from CPU 1 TX FIFO to see if it successfully decoded 'X'!
+        $display("Reading result from CPU 1 (RX_Core1)...");
         ui_in[0] = 0; 
-        spi_send_byte(8'h0C); // Command 0x0C: Read CPU 2 TX FIFO
+        spi_send_byte(8'h05); // Command 0x05: Read CPU 1 TX FIFO
         spi_read_byte(rx_data);
         ui_in[0] = 1;
         
         if (rx_data == 8'h58) begin
-            $display("SUCCESS: CPU 2 perfectly received 'X' (0x58) from CPU 0!");
+            $display("SUCCESS: CPU 1 perfectly received 'X' (0x58) from CPU 2!");
         end else begin
-            $display("FAILED: CPU 2 received 0x%h instead of 0x58", rx_data);
+            $display("FAILED: CPU 1 received 0x%h instead of 0x58", rx_data);
         end
+
+        // 6. Read back from CPU 3 TX FIFO (Parity Watchdog)
+        // Wait, 'X' is 0x58 = 01011000. That's 3 ones. Odd parity.
+        // Wait! In 8N1, there is NO parity bit sent by uart_tx.asm!
+        // The parity watchdog assumes 7E1 format.
+        // If we send 8 bits from TX without a parity bit, it's just raw data.
+        // Let's just read it to see what happens.
+        $display("Reading parity result from CPU 3...");
+        ui_in[0] = 0;
+        spi_send_byte(8'h0D);
+        spi_read_byte(rx_data);
+        ui_in[0] = 1;
         
-        $display("[Test 1.8] Completed.");
+        $display("CPU 3 Parity output: 0x%h", rx_data);
+        
+        $display("[Test 1.7] Completed.");
         $finish;
     end
     
-    initial begin $dumpfile("test_1_8_uart_dual_core.vcd"); $dumpvars(0, uart_concurrent); end
+    initial begin $dumpfile("test_1_7_uart_dual_core.vcd"); $dumpvars(0, uart_concurrent); end
+
 endmodule

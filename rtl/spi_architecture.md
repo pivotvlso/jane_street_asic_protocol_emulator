@@ -18,7 +18,7 @@ Due to the new 1-cycle pipeline architecture, each CPU has its instruction memor
 - `OP` (Opcode stream, 128 nibbles)
 - `OP1` (First Operand stream, 64 nibbles)
 - `OP2` (Second Operand stream, 8 nibbles)
-- `JMP` (Jump Table, 16 entries of 15 bits)
+- `JMP` (Jump Table, 16 entries of 16 bits)
 
 The SPI Slave supports distinct commands for each stream and CPU:
 - **CPU 0:** `0x00` (OP), `0x10` (OP1), `0x20` (OP2), `0x30` (JMP)
@@ -27,7 +27,7 @@ The SPI Slave supports distinct commands for each stream and CPU:
 - **CPU 3:** `0x09` (OP), `0x19` (OP1), `0x29` (OP2), `0x39` (JMP)
 
 For `OP`, `OP1`, and `OP2`, the SPI slave isolates the lower 4 bits of each received byte and writes it to the RAM.
-For `JMP`, each jump target is 15 bits wide, so the SPI slave groups every two bytes received into a 15-bit address and writes it to the jump table.
+For `JMP`, each jump target is 16 bits wide, so the SPI slave groups every two bytes received into a 16-bit address and writes it to the jump table.
 All streams automatically auto-increment their respective internal address pointers with each write, allowing the host to quickly flash the firmware.
 
 ### 2. Streaming Data to RX FIFOs (Commands: `0x02`, `0x03`, `0x0A`, `0x0B`)

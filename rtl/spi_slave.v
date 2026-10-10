@@ -21,7 +21,7 @@ module spi_slave (
     output reg [3:0]  cpu0_ram_op2_wdata,
     output reg        cpu0_ram_op2_we,
     output reg [3:0]  cpu0_jmp_addr,
-    output reg [14:0] cpu0_jmp_wdata,
+    output reg [15:0] cpu0_jmp_wdata,
     output reg        cpu0_jmp_we,
     output reg [7:0]  cpu0_rx_fifo_wdata,
     output reg        cpu0_rx_fifo_we,
@@ -39,7 +39,7 @@ module spi_slave (
     output reg [3:0]  cpu1_ram_op2_wdata,
     output reg        cpu1_ram_op2_we,
     output reg [3:0]  cpu1_jmp_addr,
-    output reg [14:0] cpu1_jmp_wdata,
+    output reg [15:0] cpu1_jmp_wdata,
     output reg        cpu1_jmp_we,
     output reg [7:0]  cpu1_rx_fifo_wdata,
     output reg        cpu1_rx_fifo_we,
@@ -57,7 +57,7 @@ module spi_slave (
     output reg [3:0]  cpu2_ram_op2_wdata,
     output reg        cpu2_ram_op2_we,
     output reg [3:0]  cpu2_jmp_addr,
-    output reg [14:0] cpu2_jmp_wdata,
+    output reg [15:0] cpu2_jmp_wdata,
     output reg        cpu2_jmp_we,
     output reg [7:0]  cpu2_rx_fifo_wdata,
     output reg        cpu2_rx_fifo_we,
@@ -75,7 +75,7 @@ module spi_slave (
     output reg [3:0]  cpu3_ram_op2_wdata,
     output reg        cpu3_ram_op2_we,
     output reg [3:0]  cpu3_jmp_addr,
-    output reg [14:0] cpu3_jmp_wdata,
+    output reg [15:0] cpu3_jmp_wdata,
     output reg        cpu3_jmp_we,
     output reg [7:0]  cpu3_rx_fifo_wdata,
     output reg        cpu3_rx_fifo_we,
@@ -221,7 +221,7 @@ module spi_slave (
                                         jmp_high_byte <= {shift_reg[6:0], spi_mosi};
                                         is_jmp_low <= 1;
                                     end else begin
-                                        cpu0_jmp_wdata <= {jmp_high_byte[6:0], shift_reg[6:0], spi_mosi};
+                                        cpu0_jmp_wdata <= {jmp_high_byte, shift_reg[6:0], spi_mosi};
                                         cpu0_jmp_we <= 1;
                                         cpu0_jmp_addr <= cpu0_jmp_addr + 1;
                                         is_jmp_low <= 0;
@@ -252,7 +252,7 @@ module spi_slave (
                                         jmp_high_byte <= {shift_reg[6:0], spi_mosi};
                                         is_jmp_low <= 1;
                                     end else begin
-                                        cpu1_jmp_wdata <= {jmp_high_byte[6:0], shift_reg[6:0], spi_mosi};
+                                        cpu1_jmp_wdata <= {jmp_high_byte, shift_reg[6:0], spi_mosi};
                                         cpu1_jmp_we <= 1;
                                         cpu1_jmp_addr <= cpu1_jmp_addr + 1;
                                         is_jmp_low <= 0;
@@ -282,7 +282,7 @@ module spi_slave (
                                         jmp_high_byte <= {shift_reg[6:0], spi_mosi};
                                         is_jmp_low <= 1;
                                     end else begin
-                                        cpu2_jmp_wdata <= {jmp_high_byte[6:0], shift_reg[6:0], spi_mosi};
+                                        cpu2_jmp_wdata <= {jmp_high_byte, shift_reg[6:0], spi_mosi};
                                         cpu2_jmp_we <= 1;
                                         cpu2_jmp_addr <= cpu2_jmp_addr + 1;
                                         is_jmp_low <= 0;
@@ -312,7 +312,7 @@ module spi_slave (
                                         jmp_high_byte <= {shift_reg[6:0], spi_mosi};
                                         is_jmp_low <= 1;
                                     end else begin
-                                        cpu3_jmp_wdata <= {jmp_high_byte[6:0], shift_reg[6:0], spi_mosi};
+                                        cpu3_jmp_wdata <= {jmp_high_byte, shift_reg[6:0], spi_mosi};
                                         cpu3_jmp_we <= 1;
                                         cpu3_jmp_addr <= cpu3_jmp_addr + 1;
                                         is_jmp_low <= 0;
@@ -323,7 +323,8 @@ module spi_slave (
                                     cpu3_rx_fifo_we <= 1;
                                 end
                                 default: begin
-                                    $display("[%0t] SPI UNKNOWN DATA! cmd_byte=%h data=%h", $time, cmd_byte, {shift_reg[6:0], spi_mosi});
+                                    if (cmd_byte != 8'h04 && cmd_byte != 8'h05 && cmd_byte != 8'h0C && cmd_byte != 8'h0D)
+                                        $display("[%0t] SPI UNKNOWN DATA! cmd_byte=%h data=%h", $time, cmd_byte, {shift_reg[6:0], spi_mosi});
                                 end
                             endcase
                         end

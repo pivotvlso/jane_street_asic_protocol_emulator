@@ -46,5 +46,6 @@ PROCESS_LOOP:
     // We got all 8 bits! Push to Host!
     LOAD R2
     STORE TX_FIFO      // [EXPECT: ACC=0xA5]
+    STORE SHARED_0     // Share with parity watchdog
     
     JMP BOOT           // Wait for next START token!

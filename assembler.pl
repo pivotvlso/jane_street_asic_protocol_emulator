@@ -135,7 +135,7 @@ foreach my $inst (@instructions) {
     }
 }
 
-# Write Jump Table (15 bits = {pc_op[6:0], pc_op1[4:0], pc_op2[2:0]})
+# Write Jump Table (16 bits = {pc_op[6:0], pc_op1[5:0], pc_op2[2:0]})
 my @jmp_array = (0) x 16;
 foreach my $label (keys %label_ids) {
     my $id = $label_ids{$label};
@@ -143,7 +143,7 @@ foreach my $label (keys %label_ids) {
         my $p_op = $labels{$label}->{op};
         my $p_op1 = $labels{$label}->{op1};
         my $p_op2 = $labels{$label}->{op2};
-        my $packed = ($p_op << 8) | ($p_op1 << 3) | $p_op2;
+        my $packed = ($p_op << 9) | ($p_op1 << 3) | $p_op2;
         $jmp_array[$id] = $packed;
     }
 }

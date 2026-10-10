@@ -17,7 +17,7 @@ To achieve 1-clock-cycle execution, the Instruction ROM is split into 4 physical
 1. **OP RAM (128x4):** Contains only the 4-bit Opcode. Addressed by `pc_op`.
 2. **OP1 RAM (32x4):** Contains the 1st operand nibble (if needed). Addressed by `pc_op1`.
 3. **OP2 RAM (8x4):** Contains the 2nd operand nibble (if needed). Addressed by `pc_op2`.
-4. **JUMP TABLE (16x15):** Contains up to 16 absolute `{pc_op, pc_op1, pc_op2}` target states used for branching.
+4. **JUMP TABLE (16x16):** Contains up to 16 absolute `{2'b00, pc_op, pc_op1, pc_op2}` target states used for branching.
 
 When an instruction executes, the CPU automatically increments the required program counters. A 1-nibble instruction only increments `pc_op`. A 2-nibble instruction increments `pc_op` and `pc_op1`. A 3-nibble instruction increments all three.
 

@@ -1,4 +1,5 @@
 `default_nettype none
+`timescale 1ns/1ps
 
 module top (
     input  wire [7:0] ui_in,
@@ -24,22 +25,22 @@ module top (
     wire [6:0] cpu0_ram_op_waddr; wire [3:0] cpu0_ram_op_wdata; wire cpu0_ram_op_we;
     wire [5:0] cpu0_ram_op1_waddr; wire [3:0] cpu0_ram_op1_wdata; wire cpu0_ram_op1_we;
     wire [2:0] cpu0_ram_op2_waddr; wire [3:0] cpu0_ram_op2_wdata; wire cpu0_ram_op2_we;
-    wire [3:0] cpu0_jmp_waddr; wire [14:0] cpu0_jmp_wdata; wire cpu0_jmp_we;
+    wire [3:0] cpu0_jmp_waddr; wire [15:0] cpu0_jmp_wdata; wire cpu0_jmp_we;
 
     wire [6:0] cpu1_ram_op_waddr; wire [3:0] cpu1_ram_op_wdata; wire cpu1_ram_op_we;
     wire [5:0] cpu1_ram_op1_waddr; wire [3:0] cpu1_ram_op1_wdata; wire cpu1_ram_op1_we;
     wire [2:0] cpu1_ram_op2_waddr; wire [3:0] cpu1_ram_op2_wdata; wire cpu1_ram_op2_we;
-    wire [3:0] cpu1_jmp_waddr; wire [14:0] cpu1_jmp_wdata; wire cpu1_jmp_we;
+    wire [3:0] cpu1_jmp_waddr; wire [15:0] cpu1_jmp_wdata; wire cpu1_jmp_we;
 
     wire [6:0] cpu2_ram_op_waddr; wire [3:0] cpu2_ram_op_wdata; wire cpu2_ram_op_we;
     wire [5:0] cpu2_ram_op1_waddr; wire [3:0] cpu2_ram_op1_wdata; wire cpu2_ram_op1_we;
     wire [2:0] cpu2_ram_op2_waddr; wire [3:0] cpu2_ram_op2_wdata; wire cpu2_ram_op2_we;
-    wire [3:0] cpu2_jmp_waddr; wire [14:0] cpu2_jmp_wdata; wire cpu2_jmp_we;
+    wire [3:0] cpu2_jmp_waddr; wire [15:0] cpu2_jmp_wdata; wire cpu2_jmp_we;
 
     wire [6:0] cpu3_ram_op_waddr; wire [3:0] cpu3_ram_op_wdata; wire cpu3_ram_op_we;
     wire [5:0] cpu3_ram_op1_waddr; wire [3:0] cpu3_ram_op1_wdata; wire cpu3_ram_op1_we;
     wire [2:0] cpu3_ram_op2_waddr; wire [3:0] cpu3_ram_op2_wdata; wire cpu3_ram_op2_we;
-    wire [3:0] cpu3_jmp_waddr; wire [14:0] cpu3_jmp_wdata; wire cpu3_jmp_we;
+    wire [3:0] cpu3_jmp_waddr; wire [15:0] cpu3_jmp_wdata; wire cpu3_jmp_we;
 
     wire [7:0] cpu0_rx_fifo_wdata; wire cpu0_rx_fifo_we;
     wire [7:0] cpu0_tx_fifo_rdata; wire cpu0_tx_fifo_re; wire cpu0_tx_fifo_empty;
@@ -155,7 +156,7 @@ module top (
     reg [3:0] cpu0_rom_op [0:127];
     reg [3:0] cpu0_rom_op1 [0:63];
     reg [3:0] cpu0_rom_op2 [0:7];
-    reg [14:0] cpu0_jmp_table [0:15];
+    reg [15:0] cpu0_jmp_table [0:15];
     
     always @(posedge clk) begin
         if (cpu0_ram_op_we) cpu0_rom_op[cpu0_ram_op_waddr] <= cpu0_ram_op_wdata;
@@ -165,14 +166,14 @@ module top (
     end
     
     wire [6:0] cpu0_pc_op;
-    wire [4:0] cpu0_pc_op1;
+    wire [5:0] cpu0_pc_op1;
     wire [2:0] cpu0_pc_op2;
     wire [3:0] cpu0_jmp_addr;
     
     wire [3:0] cpu0_rom_op_data = cpu0_rom_op[cpu0_pc_op];
     wire [3:0] cpu0_rom_op1_data = cpu0_rom_op1[cpu0_pc_op1];
     wire [3:0] cpu0_rom_op2_data = cpu0_rom_op2[cpu0_pc_op2];
-    wire [14:0] cpu0_jmp_data = cpu0_jmp_table[cpu0_jmp_addr];
+    wire [15:0] cpu0_jmp_data = cpu0_jmp_table[cpu0_jmp_addr];
 
     wire [3:0] cpu0_pin_out, cpu0_pin_dir;
     wire [3:0] cpu0_mem_addr;
@@ -242,7 +243,7 @@ module top (
     reg [3:0] cpu1_rom_op [0:127];
     reg [3:0] cpu1_rom_op1 [0:63];
     reg [3:0] cpu1_rom_op2 [0:7];
-    reg [14:0] cpu1_jmp_table [0:15];
+    reg [15:0] cpu1_jmp_table [0:15];
     
     always @(posedge clk) begin
         if (cpu1_ram_op_we) cpu1_rom_op[cpu1_ram_op_waddr] <= cpu1_ram_op_wdata;
@@ -252,14 +253,14 @@ module top (
     end
     
     wire [6:0] cpu1_pc_op;
-    wire [4:0] cpu1_pc_op1;
+    wire [5:0] cpu1_pc_op1;
     wire [2:0] cpu1_pc_op2;
     wire [3:0] cpu1_jmp_addr;
     
     wire [3:0] cpu1_rom_op_data = cpu1_rom_op[cpu1_pc_op];
     wire [3:0] cpu1_rom_op1_data = cpu1_rom_op1[cpu1_pc_op1];
     wire [3:0] cpu1_rom_op2_data = cpu1_rom_op2[cpu1_pc_op2];
-    wire [14:0] cpu1_jmp_data = cpu1_jmp_table[cpu1_jmp_addr];
+    wire [15:0] cpu1_jmp_data = cpu1_jmp_table[cpu1_jmp_addr];
 
     wire [3:0] cpu1_pin_out, cpu1_pin_dir;
     wire [3:0] cpu1_pin_in = uio_in[3:0];
@@ -334,7 +335,7 @@ module top (
     reg [3:0] cpu2_rom_op [0:127];
     reg [3:0] cpu2_rom_op1 [0:63];
     reg [3:0] cpu2_rom_op2 [0:7];
-    reg [14:0] cpu2_jmp_table [0:15];
+    reg [15:0] cpu2_jmp_table [0:15];
     
     always @(posedge clk) begin
         if (cpu2_ram_op_we) cpu2_rom_op[cpu2_ram_op_waddr] <= cpu2_ram_op_wdata;
@@ -344,14 +345,14 @@ module top (
     end
     
     wire [6:0] cpu2_pc_op;
-    wire [4:0] cpu2_pc_op1;
+    wire [5:0] cpu2_pc_op1;
     wire [2:0] cpu2_pc_op2;
     wire [3:0] cpu2_jmp_addr;
     
     wire [3:0] cpu2_rom_op_data = cpu2_rom_op[cpu2_pc_op];
     wire [3:0] cpu2_rom_op1_data = cpu2_rom_op1[cpu2_pc_op1];
     wire [3:0] cpu2_rom_op2_data = cpu2_rom_op2[cpu2_pc_op2];
-    wire [14:0] cpu2_jmp_data = cpu2_jmp_table[cpu2_jmp_addr];
+    wire [15:0] cpu2_jmp_data = cpu2_jmp_table[cpu2_jmp_addr];
 
     wire [3:0] cpu2_pin_out, cpu2_pin_dir;
     wire [3:0] cpu2_pin_in = uio_in[3:0];
@@ -422,7 +423,7 @@ module top (
     reg [3:0] cpu3_rom_op [0:127];
     reg [3:0] cpu3_rom_op1 [0:63];
     reg [3:0] cpu3_rom_op2 [0:7];
-    reg [14:0] cpu3_jmp_table [0:15];
+    reg [15:0] cpu3_jmp_table [0:15];
     
     always @(posedge clk) begin
         if (cpu3_ram_op_we) cpu3_rom_op[cpu3_ram_op_waddr] <= cpu3_ram_op_wdata;
@@ -432,14 +433,14 @@ module top (
     end
     
     wire [6:0] cpu3_pc_op;
-    wire [4:0] cpu3_pc_op1;
+    wire [5:0] cpu3_pc_op1;
     wire [2:0] cpu3_pc_op2;
     wire [3:0] cpu3_jmp_addr;
     
     wire [3:0] cpu3_rom_op_data = cpu3_rom_op[cpu3_pc_op];
     wire [3:0] cpu3_rom_op1_data = cpu3_rom_op1[cpu3_pc_op1];
     wire [3:0] cpu3_rom_op2_data = cpu3_rom_op2[cpu3_pc_op2];
-    wire [14:0] cpu3_jmp_data = cpu3_jmp_table[cpu3_jmp_addr];
+    wire [15:0] cpu3_jmp_data = cpu3_jmp_table[cpu3_jmp_addr];
 
     wire [3:0] cpu3_pin_out, cpu3_pin_dir;
     wire [3:0] cpu3_pin_in = uio_in[3:0];
@@ -521,4 +522,9 @@ module top (
     assign uo_out[6] = cpu1_tx_fifo_empty;
     assign uo_out[7] = cpu2_tx_fifo_empty; // cpu3_tx_empty omitted from physical pins
 
+    always @(posedge clk) begin
+        if (cpu3_run && !cpu3_mem_stall) begin
+            $display("DBG|3|%0t|OP=%h:%h|OP1=%h:%h|%h|%h|%h|%h|%h|%h|%h|%h|%h|%h|%h", $time, cpu3_pc_op, cpu3_rom_op_data, cpu3_pc_op1, cpu3_rom_op1_data, core3.acc, core3.b_reg, core3.r_regs[2], core3.r_regs[3], core3.r_regs[4], core3.r_regs[8], core3.flag_carry, core3.flag_zero, core3.pin_dir, core3.pin_out, 8'h0);
+        end
+    end
 endmodule
