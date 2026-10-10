@@ -10,7 +10,7 @@ project:
   clock_hz:     50000000
 
   # How many tiles your design occupies? A single tile is about 160x100 uM.
-  tiles: "1x2"          # Because 4 CPUs + memories might need more area
+  tiles: "2x2"          # Because 4 CPUs + memories might need more area
 
   # Your top module name must start with "tt_um_".
   top_module:  "tt_um_protocol_emulator"
