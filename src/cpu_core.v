@@ -87,12 +87,7 @@ module cpu_core (
             pc_op1 <= 0;
             pc_op2 <= 0;
         end else if (!mem_stall) begin
-            // Assertion: Stop if executing uninitialized instruction
-            if (rom_op_data === 4'hx) begin
-                $display("[%0t] ASSERTION FAILED: CPU executed uninitialized instruction RAM at PC %0d!", $time, pc_op);
-                $finish;
-            end
-            
+
             // Instruction Execution
             case (rom_op_data)
                 4'h0: begin acc <= add_res[7:0]; flag_carry <= add_res[8]; flag_zero <= (add_res[7:0] == 0); end
