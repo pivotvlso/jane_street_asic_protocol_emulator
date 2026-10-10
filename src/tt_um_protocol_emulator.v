@@ -172,11 +172,7 @@ module tt_um_protocol_emulator (
         .shared_valid({shared_reg_3_valid, shared_reg_2_valid, shared_reg_1_valid, shared_reg_0_valid})
     );
     
-    always @(posedge clk) begin
-        if (cpu0_run) begin
-            $display("DBG|0|%0t|OP=%h:%h|OP1=%h:%h|%h|%h|%h|%h|%h|%h|%h|%h|%h|%h|%h", $time, cpu0_pc_op, cpu0_rom_op_data, cpu0_pc_op1, cpu0_rom_op1_data, core0.acc, core0.b_reg, core0.r_regs[2], core0.r_regs[3], core0.r_regs[4], core0.r_regs[8], core0.flag_carry, core0.flag_zero, core0.pin_dir, core0.pin_out, 8'h0);
-        end
-    end
+
 
     // ========================================================
     // CPU 1 SUBSYSTEM
@@ -217,9 +213,7 @@ module tt_um_protocol_emulator (
     fifo tx1 (.clk(clk), .rst_n(rst_n), .wdata(cpu1_mem_wdata), .we(cpu1_tx_we),
               .rdata(cpu1_tx_fifo_rdata), .re(cpu1_tx_fifo_re), .empty(cpu1_tx_fifo_empty), .full(cpu1_tx_full));
 
-    always @(posedge clk) begin
-        if (cpu1_tx_we) $display("[%0t] CPU 1 WROTE TO TX FIFO: 0x%h", $time, cpu1_mem_wdata);
-    end
+
 
     wire [7:0] cpu1_timer_rdata; wire cpu1_timer_zero;
     wire cpu1_timer_we_l = (cpu1_mem_addr == 4'h7) && cpu1_mem_we;
@@ -259,11 +253,7 @@ module tt_um_protocol_emulator (
         .shared_valid({shared_reg_3_valid, shared_reg_2_valid, shared_reg_1_valid, shared_reg_0_valid})
     );
 
-    always @(posedge clk) begin
-        if (cpu1_run) begin
-            $display("DBG|1|%0t|OP=%h:%h|OP1=%h:%h|%h|%h|%h|%h|%h|%h|%h|%h|%h|%h|%h", $time, cpu1_pc_op, cpu1_rom_op_data, cpu1_pc_op1, cpu1_rom_op1_data, core1.acc, core1.b_reg, core1.r_regs[2], core1.r_regs[3], core1.r_regs[4], core1.r_regs[8], core1.flag_carry, core1.flag_zero, core1.pin_dir, core1.pin_out, 8'h0);
-        end
-    end
+
 
     // ========================================================
     // CPU 2 SUBSYSTEM
@@ -342,11 +332,7 @@ module tt_um_protocol_emulator (
         .shared_valid({shared_reg_3_valid, shared_reg_2_valid, shared_reg_1_valid, shared_reg_0_valid})
     );
 
-    always @(posedge clk) begin
-        if (cpu2_run && !cpu2_mem_stall) begin
-            $display("DBG|2|%0t|OP=%h:%h|OP1=%h:%h|%h|%h|%h|%h|%h|%h|%h|%h|%h|%h|%h", $time, cpu2_pc_op, cpu2_rom_op_data, cpu2_pc_op1, cpu2_rom_op1_data, core2.acc, core2.b_reg, core2.r_regs[2], core2.r_regs[3], core2.r_regs[4], core2.r_regs[8], core2.flag_carry, core2.flag_zero, core2.pin_dir, core2.pin_out, 8'h0);
-        end
-    end
+
 
     // ========================================================
     // CPU 3 SUBSYSTEM
@@ -449,9 +435,5 @@ module tt_um_protocol_emulator (
     assign uo_out[6] = cpu1_tx_fifo_empty;
     assign uo_out[7] = cpu2_tx_fifo_empty; // cpu3_tx_empty omitted from physical pins
 
-    always @(posedge clk) begin
-        if (cpu3_run && !cpu3_mem_stall) begin
-            $display("DBG|3|%0t|OP=%h:%h|OP1=%h:%h|%h|%h|%h|%h|%h|%h|%h|%h|%h|%h|%h", $time, cpu3_pc_op, cpu3_rom_op_data, cpu3_pc_op1, cpu3_rom_op1_data, core3.acc, core3.b_reg, core3.r_regs[2], core3.r_regs[3], core3.r_regs[4], core3.r_regs[8], core3.flag_carry, core3.flag_zero, core3.pin_dir, core3.pin_out, 8'h0);
-        end
-    end
+
 endmodule
