@@ -231,7 +231,7 @@ module top (
     );
     
     always @(posedge clk) begin
-        if (cpu0_run && !cpu0_mem_stall) begin
+        if (cpu0_run) begin
             $display("DBG|0|%0t|OP=%h:%h|OP1=%h:%h|%h|%h|%h|%h|%h|%h|%h|%h|%h|%h|%h", $time, cpu0_pc_op, cpu0_rom_op_data, cpu0_pc_op1, cpu0_rom_op1_data, core0.acc, core0.b_reg, core0.r_regs[2], core0.r_regs[3], core0.r_regs[4], core0.r_regs[8], core0.flag_carry, core0.flag_zero, core0.pin_dir, core0.pin_out, 8'h0);
         end
     end
@@ -312,7 +312,7 @@ module top (
 
     cpu_core core1 (
         .clk(clk), .rst_n(rst_n), .run(cpu1_run),
-        .pin_state(uio_in[7:4]), .pin_out(cpu1_pin_out), .pin_dir(cpu1_pin_dir),
+        .pin_state(uio_in[3:0]), .pin_out(cpu1_pin_out), .pin_dir(cpu1_pin_dir),
         .pc_op(cpu1_pc_op), .rom_op_data(cpu1_rom_op_data),
         .pc_op1(cpu1_pc_op1), .rom_op1_data(cpu1_rom_op1_data),
         .pc_op2(cpu1_pc_op2), .rom_op2_data(cpu1_rom_op2_data),
@@ -323,7 +323,7 @@ module top (
     );
 
     always @(posedge clk) begin
-        if (cpu1_run && !cpu1_mem_stall) begin
+        if (cpu1_run) begin
             $display("DBG|1|%0t|OP=%h:%h|OP1=%h:%h|%h|%h|%h|%h|%h|%h|%h|%h|%h|%h|%h", $time, cpu1_pc_op, cpu1_rom_op_data, cpu1_pc_op1, cpu1_rom_op1_data, core1.acc, core1.b_reg, core1.r_regs[2], core1.r_regs[3], core1.r_regs[4], core1.r_regs[8], core1.flag_carry, core1.flag_zero, core1.pin_dir, core1.pin_out, 8'h0);
         end
     end

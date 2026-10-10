@@ -11,7 +11,7 @@ my %opcodes = (
 my %registers = (
     "ACC" => 0, "B" => 1, "R2" => 2, "R3" => 3, "TX_FIFO" => 4, "RX_FIFO" => 5, "PIN_STATE" => 6, 
     "TIMER_L" => 7, "TIMER_H" => 8, "FLAGS" => 8, "SHARED_0" => 9, "SHARED_1" => 10, 
-    "SHARED_2" => 11, "SHARED_3" => 12, "R4" => 11, "R5" => 12, "R6" => 13, "R7" => 14, "PIN_DIR" => 15
+    "R4" => 11, "R5" => 12, "R6" => 13, "R7" => 14, "PIN_DIR" => 15
 );
 
 my $file = $ARGV[0] or die "Usage: $0 <file.asm>\n";
@@ -108,9 +108,11 @@ foreach my $inst (@instructions) {
         } elsif ($arg =~ /^[0-9]+$/) {
             $val = $arg;
         } else {
-            die "Unknown register/value: $arg\n";
+            die "Unknown register/value: $arg
+";
         }
-        print $out_op1 sprintf("%X\n", $val);
+        print $out_op1 sprintf("%X
+", $val);
     } elsif ($op_val >= 0xD) {
         my $label = $parts[1];
         if (!defined $label_ids{$label}) {

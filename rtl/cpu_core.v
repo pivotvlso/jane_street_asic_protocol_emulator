@@ -67,8 +67,7 @@ module cpu_core (
 
     function is_internal_reg(input [3:0] addr);
         begin
-            // 0=ACC, 1=B, 2=R2, 3=R3, 8=FLAGS, D=R6, E=R7, F=PIN_DIR
-            is_internal_reg = (addr <= 4'h3) || (addr == 4'h8) || (addr >= 4'hD);
+            is_internal_reg = (addr <= 4'h3) || (addr == 4'h8) || (addr >= 4'hB);
         end
     endfunction
 
