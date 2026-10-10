@@ -28,6 +28,14 @@ module fifo #(
     
     assign rdata = mem[rptr[2:0]];
     
+    // Memory writes (synchronous, no async reset)
+    always @(posedge clk) begin
+        if (we && !full) begin
+            mem[wptr[2:0]] <= wdata;
+        end
+    end
+    
+    // Pointers and counters (with async reset)
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             wptr <= 0;
@@ -36,7 +44,6 @@ module fifo #(
         end else begin
             case ({we && !full, re && !empty})
                 2'b10: begin // Write only
-                    mem[wptr[2:0]] <= wdata;
                     wptr <= wptr + 1;
                     count <= count + 1;
                 end
@@ -45,7 +52,6 @@ module fifo #(
                     count <= count - 1;
                 end
                 2'b11: begin // Both (passthrough counter)
-                    mem[wptr[2:0]] <= wdata;
                     wptr <= wptr + 1;
                     rptr <= rptr + 1;
                 end
