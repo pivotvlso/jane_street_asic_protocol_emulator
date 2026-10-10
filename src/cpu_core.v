@@ -117,7 +117,6 @@ module cpu_core (
                     if (is_internal_reg(rom_op1_data)) begin
                         if (rom_op1_data == 4'h1) b_reg <= acc;
                         else if (rom_op1_data == 4'hF) pin_dir <= acc[3:0];
-                        else if (rom_op1_data != 4'h0 && rom_op1_data != 4'h8) r_regs[rom_op1_data] <= acc;
                     end
                 end
             endcase
@@ -135,6 +134,17 @@ module cpu_core (
                 pc_op <= pc_op + 1;
                 if (!is_1_nibble) pc_op1 <= pc_op1 + 1;
                 if (is_3_nibble) pc_op2 <= pc_op2 + 1;
+            end
+        end
+    end
+
+    // Separate synchronous block for r_regs (no async reset)
+    always @(posedge clk) begin
+        if (run && !mem_stall && rom_op_data == 4'hC) begin
+            if (is_internal_reg(rom_op1_data)) begin
+                if (rom_op1_data != 4'h0 && rom_op1_data != 4'h1 && rom_op1_data != 4'h8 && rom_op1_data != 4'hF) begin
+                    r_regs[rom_op1_data] <= acc;
+                end
             end
         end
     end
