@@ -155,8 +155,8 @@ module top (
     // Split Stream ROMs
     reg [3:0] cpu0_rom_op [0:127];
     reg [3:0] cpu0_rom_op1 [0:63];
-    reg [3:0] cpu0_rom_op2 [0:7];
-    reg [15:0] cpu0_jmp_table [0:15];
+    reg [3:0] cpu0_rom_op2 [0:15];
+    reg [16:0] cpu0_jmp_table [0:15];
     
     always @(posedge clk) begin
         if (cpu0_ram_op_we) cpu0_rom_op[cpu0_ram_op_waddr] <= cpu0_ram_op_wdata;
@@ -167,13 +167,13 @@ module top (
     
     wire [6:0] cpu0_pc_op;
     wire [5:0] cpu0_pc_op1;
-    wire [2:0] cpu0_pc_op2;
+    wire [3:0] cpu0_pc_op2;
     wire [3:0] cpu0_jmp_addr;
     
     wire [3:0] cpu0_rom_op_data = cpu0_rom_op[cpu0_pc_op];
     wire [3:0] cpu0_rom_op1_data = cpu0_rom_op1[cpu0_pc_op1];
     wire [3:0] cpu0_rom_op2_data = cpu0_rom_op2[cpu0_pc_op2];
-    wire [15:0] cpu0_jmp_data = cpu0_jmp_table[cpu0_jmp_addr];
+    wire [16:0] cpu0_jmp_data = cpu0_jmp_table[cpu0_jmp_addr];
 
     wire [3:0] cpu0_pin_out, cpu0_pin_dir;
     wire [3:0] cpu0_mem_addr;
@@ -242,8 +242,8 @@ module top (
     // Split Stream ROMs
     reg [3:0] cpu1_rom_op [0:127];
     reg [3:0] cpu1_rom_op1 [0:63];
-    reg [3:0] cpu1_rom_op2 [0:7];
-    reg [15:0] cpu1_jmp_table [0:15];
+    reg [3:0] cpu1_rom_op2 [0:15];
+    reg [16:0] cpu1_jmp_table [0:15];
     
     always @(posedge clk) begin
         if (cpu1_ram_op_we) cpu1_rom_op[cpu1_ram_op_waddr] <= cpu1_ram_op_wdata;
@@ -254,13 +254,13 @@ module top (
     
     wire [6:0] cpu1_pc_op;
     wire [5:0] cpu1_pc_op1;
-    wire [2:0] cpu1_pc_op2;
+    wire [3:0] cpu1_pc_op2;
     wire [3:0] cpu1_jmp_addr;
     
     wire [3:0] cpu1_rom_op_data = cpu1_rom_op[cpu1_pc_op];
     wire [3:0] cpu1_rom_op1_data = cpu1_rom_op1[cpu1_pc_op1];
     wire [3:0] cpu1_rom_op2_data = cpu1_rom_op2[cpu1_pc_op2];
-    wire [15:0] cpu1_jmp_data = cpu1_jmp_table[cpu1_jmp_addr];
+    wire [16:0] cpu1_jmp_data = cpu1_jmp_table[cpu1_jmp_addr];
 
     wire [3:0] cpu1_pin_out, cpu1_pin_dir;
     wire [3:0] cpu1_pin_in = uio_in[3:0];
@@ -334,8 +334,8 @@ module top (
     // Split Stream ROMs
     reg [3:0] cpu2_rom_op [0:127];
     reg [3:0] cpu2_rom_op1 [0:63];
-    reg [3:0] cpu2_rom_op2 [0:7];
-    reg [15:0] cpu2_jmp_table [0:15];
+    reg [3:0] cpu2_rom_op2 [0:15];
+    reg [16:0] cpu2_jmp_table [0:15];
     
     always @(posedge clk) begin
         if (cpu2_ram_op_we) cpu2_rom_op[cpu2_ram_op_waddr] <= cpu2_ram_op_wdata;
@@ -346,13 +346,13 @@ module top (
     
     wire [6:0] cpu2_pc_op;
     wire [5:0] cpu2_pc_op1;
-    wire [2:0] cpu2_pc_op2;
+    wire [3:0] cpu2_pc_op2;
     wire [3:0] cpu2_jmp_addr;
     
     wire [3:0] cpu2_rom_op_data = cpu2_rom_op[cpu2_pc_op];
     wire [3:0] cpu2_rom_op1_data = cpu2_rom_op1[cpu2_pc_op1];
     wire [3:0] cpu2_rom_op2_data = cpu2_rom_op2[cpu2_pc_op2];
-    wire [15:0] cpu2_jmp_data = cpu2_jmp_table[cpu2_jmp_addr];
+    wire [16:0] cpu2_jmp_data = cpu2_jmp_table[cpu2_jmp_addr];
 
     wire [3:0] cpu2_pin_out, cpu2_pin_dir;
     wire [3:0] cpu2_pin_in = uio_in[3:0];
@@ -422,8 +422,8 @@ module top (
     // Split Stream ROMs
     reg [3:0] cpu3_rom_op [0:127];
     reg [3:0] cpu3_rom_op1 [0:63];
-    reg [3:0] cpu3_rom_op2 [0:7];
-    reg [15:0] cpu3_jmp_table [0:15];
+    reg [3:0] cpu3_rom_op2 [0:15];
+    reg [16:0] cpu3_jmp_table [0:15];
     
     always @(posedge clk) begin
         if (cpu3_ram_op_we) cpu3_rom_op[cpu3_ram_op_waddr] <= cpu3_ram_op_wdata;
@@ -434,13 +434,13 @@ module top (
     
     wire [6:0] cpu3_pc_op;
     wire [5:0] cpu3_pc_op1;
-    wire [2:0] cpu3_pc_op2;
+    wire [3:0] cpu3_pc_op2;
     wire [3:0] cpu3_jmp_addr;
     
     wire [3:0] cpu3_rom_op_data = cpu3_rom_op[cpu3_pc_op];
     wire [3:0] cpu3_rom_op1_data = cpu3_rom_op1[cpu3_pc_op1];
     wire [3:0] cpu3_rom_op2_data = cpu3_rom_op2[cpu3_pc_op2];
-    wire [15:0] cpu3_jmp_data = cpu3_jmp_table[cpu3_jmp_addr];
+    wire [16:0] cpu3_jmp_data = cpu3_jmp_table[cpu3_jmp_addr];
 
     wire [3:0] cpu3_pin_out, cpu3_pin_dir;
     wire [3:0] cpu3_pin_in = uio_in[3:0];

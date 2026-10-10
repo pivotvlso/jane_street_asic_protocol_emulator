@@ -46,6 +46,8 @@ $assertfile =~ s/\.asm$/_assert.vh/;
 my $core_id = "";
 if ($file =~ /core(\d)/) {
     $core_id = $1;
+} elsif ($file =~ /cpu(\d)/) {
+    $core_id = $1;
 } elsif ($file =~ /tx/) {
     $core_id = "0";
 }

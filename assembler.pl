@@ -61,6 +61,7 @@ foreach my $line (@lines) {
             $label_ids{$label} = $next_label_id++;
         }
     }
+
     
     push @instructions, { op => $op, args => \@parts };
     
@@ -81,7 +82,7 @@ foreach my $line (@lines) {
 
 if ($pc_op > 128) { warn "WARNING: Program size exceeds 128-nibble op limit!\n"; }
 if ($pc_op1 > 64) { warn "WARNING: Program size exceeds 64-nibble op1 limit!\n"; }
-if ($pc_op2 > 8)  { warn "WARNING: Program size exceeds 8-nibble op2 limit!\n"; }
+if ($pc_op2 > 15)  { warn "WARNING: Program size exceeds 15-nibble op2 limit!\n"; }
 if ($next_label_id > 16) { warn "WARNING: Exceeded 16 Jump ID limit!\n"; }
 
 # Pass 2: Generate Split-Stream Hex Files
@@ -145,13 +146,14 @@ foreach my $label (keys %label_ids) {
         my $p_op = $labels{$label}->{op};
         my $p_op1 = $labels{$label}->{op1};
         my $p_op2 = $labels{$label}->{op2};
-        my $packed = ($p_op << 9) | ($p_op1 << 3) | $p_op2;
+        print "DEBUG: Label=$label, ID=$id, OP=$p_op, OP1=$p_op1\n";
+        my $packed = ($p_op << 10) | ($p_op1 << 4) | $p_op2;
         $jmp_array[$id] = $packed;
     }
 }
 
 for (my $i = 0; $i < 16; $i++) {
-    print $out_jmp sprintf("%04X\n", $jmp_array[$i]);
+    print $out_jmp sprintf("%05X\n", $jmp_array[$i]);
 }
 
 close($out_op);

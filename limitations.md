@@ -71,9 +71,22 @@ The ASIC utilizes small, 8-byte hardware FIFOs to buffer data between the SPI Ho
 * **Impact:** Because these memory addresses are globally accessible across all 4 CPUs, `R4` and `R5` are **NOT** private to the executing core. If multiple CPUs attempt to use `R4` as a local loop counter simultaneously, they will overwrite each other's state via the global shared memory and cause data corruption (as they are inadvertently ping-ponging the same physical hardware register). Firmware developers must strictly use `R2` or `R3` for private loops, or mathematically coordinate shared usage of `R4`/`R5` across cores.
 
 ## 16. 10BASE-T Ethernet Limitations
-* **Limitation:** Ethernet requires 10 Mbps Manchester encoding and precise differential signaling.
-* **Impact:**
-  - **TX Only (Half-Duplex):** To achieve zero differential skew across TX+ and TX-, all 4 CPUs must be utilized simultaneously (Serializer -> Encoder -> TX+ / TX-). This leaves no CPUs available for listening, meaning the emulator cannot receive (RX) Ethernet packets while configured for TX.
-  - **Deterministic Jitter:** A 50ns half-bit transition equals 2.5 clock cycles at 50MHz. Because CPUs cannot delay for fractional cycles, the encoder alternates between 2 and 3 cycles (40ns and 60ns), introducing ±10ns of jitter (within the ±11ns IEEE 802.3 tolerance, but not perfect).
-  - **Software CRC32 Impossible:** Calculating the 32-bit Frame Check Sequence (FCS) exceeds the 128-nibble instruction limit. The Host RP2040 must pre-calculate the CRC32 and append it to the raw frame payload before streaming it to the ASIC.
-  - **Link Pulses:** Normal Link Pulses (NLP) required every 16ms must be manually triggered by the Host RP2040 to keep the physical link alive during idle periods.
+* **Overview:** Implementing a 10 Mbps Manchester-encoded protocol on a 50 MHz accumulator-based architecture introduces several absolute physical and logical constraints.
+* **Key Limitations:**
+
+  1. **Strictly Half-Duplex (Due to 4-Core Limit)**
+     - **TX Requirement:** Transmitting differential Ethernet requires all 4 cores working synchronously (Serializer → Encoder → TX+ and TX- Drivers).
+     - **RX Requirement:** Receiving requires 2 cores (Edge Detector → Deserializer).
+     - **Impact:** Since the ASIC only has 4 cores, Full-Duplex is physically impossible. The Host RP2040 must dynamically hot-swap the internal CPU firmware via SPI to switch between Transmit mode and Receive mode.
+
+  2. **Deterministic Jitter at 50MHz**
+     - **Cause:** A 10 Mbps half-bit transition is 50ns. At a 50MHz master clock (20ns per cycle), 50ns equates to exactly 2.5 clock cycles.
+     - **Impact:** Because CPUs cannot delay for fractional cycles, the Manchester encoder firmware alternates delays of 2 cycles (40ns) and 3 cycles (60ns). This introduces ±10ns of deterministic jitter. While this fits tightly within the ±11ns IEEE 802.3 tolerance, it leaves virtually no margin for external noise.
+
+  3. **No Hardware CRC32 (Frame Check Sequence)**
+     - **Cause:** Calculating the standard 32-bit Ethernet CRC32 polynomial requires complex bit-wise shifting arrays that vastly exceed the strict 128-nibble instruction memory limit of the cores.
+     - **Impact:** The ASIC cannot natively generate or verify the FCS payload. The Host RP2040 must pre-calculate and append the CRC32 to outgoing TX frames, and software-verify the CRC32 on incoming RX frames.
+
+  4. **Host-Driven Normal Link Pulses (NLP)**
+     - **Cause:** 10BASE-T requires heartbeat link pulses every 16ms to keep the physical link alive. The ASIC has no background timers large enough to autonomously inject these pulses.
+     - **Impact:** The Host RP2040 must actively monitor idle periods and manually trigger NLP transmissions via the SPI interface to prevent the downstream switch/router from dropping the link.

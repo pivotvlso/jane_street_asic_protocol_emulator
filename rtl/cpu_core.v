@@ -19,12 +19,12 @@ module cpu_core (
     output reg  [5:0] pc_op1,
     input  wire [3:0] rom_op1_data,
     
-    output reg  [2:0] pc_op2,
+    output reg  [3:0] pc_op2,
     input  wire [3:0] rom_op2_data,
 
     // Jump Table Interface (Hardware Jump Table managed by top.v)
     output wire [3:0]  jmp_table_addr, // The jump ID to lookup
-    input  wire [15:0] jmp_table_data, // {pc_op[6:0], pc_op1[5:0], pc_op2[2:0]}
+    input  wire [16:0] jmp_table_data, // {pc_op[6:0], pc_op1[5:0], pc_op2[3:0]}
     
     // Memory-Mapped IO Interface (External Peripherals)
     output wire [3:0] mem_addr,
@@ -132,9 +132,9 @@ module cpu_core (
                (rom_op_data == 4'hE && !flag_zero) || 
                (rom_op_data == 4'hF && flag_carry)) begin
                 // Take Branch (Jump)
-                pc_op <= jmp_table_data[15:9];
-                pc_op1 <= jmp_table_data[8:3];
-                pc_op2 <= jmp_table_data[2:0];
+                pc_op <= jmp_table_data[16:10];
+                pc_op1 <= jmp_table_data[9:4];
+                pc_op2 <= jmp_table_data[3:0];
             end else begin
                 // Normal PC Increment
                 pc_op <= pc_op + 1;
