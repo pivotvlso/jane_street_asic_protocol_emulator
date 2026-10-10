@@ -1,5 +1,6 @@
 --- 
 # TinyTapeout project information
+yaml_version: 6
 project:
   title:        "Quad-Core Protocol Emulator"
   author:       "Antigravity"
