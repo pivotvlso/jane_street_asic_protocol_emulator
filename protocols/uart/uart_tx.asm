@@ -18,11 +18,13 @@ START:
     
     SET0 0             // [2] Start bit (LOW)
     LOAD R6            // [2] Load baud delay // [EXPECT: ACC=R6]
-    STORE TIMER_L      // [2] Start timer // [EXPECT: TIMER_L=ACC]
-    LOAD TIMER_L       // [2] CPU Halts here until timer hits 0! // [EXPECT: ACC=TIMER_L]
+    STORE TIMER_L      // [2] Start timer
+WAIT_START_BIT:
+    LOAD TIMER_L       // [2] Poll TIMER_L
+    JMPNZ WAIT_START_BIT // [3] Loop until zero
     
     LOADI 8            // [2] // [EXPECT: ACC=8]
-    STORE R4           // [2] R4 = Bit counter (8) // [EXPECT: R4=ACC]
+    STORE R3           // [2] R3 = Bit counter (8) // [EXPECT: R3=ACC]
 
 BIT_LOOP:
     LOAD R2            // [2] // [EXPECT: ACC=R2]
@@ -39,21 +41,25 @@ SEND_ONE:
 
 WAIT_BIT:
     LOAD R6            // [2] // [EXPECT: ACC=R6]
-    STORE TIMER_L      // [2] Start timer // [EXPECT: TIMER_L=ACC]
-    LOAD TIMER_L       // [2] CPU Halts until 0! // [EXPECT: ACC=TIMER_L]
+    STORE TIMER_L      // [2] Start timer
+WAIT_DATA_BIT:
+    LOAD TIMER_L       // [2] Poll TIMER_L
+    JMPNZ WAIT_DATA_BIT // [3] Loop until zero
     
     // Decrement Bit Counter
     LOADI 1            // [2] // [EXPECT: ACC=1]
     STORE B            // [2] // [EXPECT: B=ACC]
-    LOAD R4            // [2] // [EXPECT: ACC=R4]
-    SUB                // [1] ACC = R4 - 1 // [EXPECT: ACC=ACC-B]
-    STORE R4           // [2] // [EXPECT: R4=ACC]
+    LOAD R3            // [2] // [EXPECT: ACC=R3]
+    SUB                // [1] ACC = R3 - 1 // [EXPECT: ACC=ACC-B]
+    STORE R3           // [2] // [EXPECT: R3=ACC]
     JMPNZ BIT_LOOP     // [3] Jump to BIT_LOOP if not zero!
     
     // Stop Bit
     SET1 0             // [2]
     LOAD R6            // [2] // [EXPECT: ACC=R6]
-    STORE TIMER_L      // [2] // [EXPECT: TIMER_L=ACC]
-    LOAD TIMER_L       // [2] CPU Halts until 0! // [EXPECT: ACC=TIMER_L]
+    STORE TIMER_L      // [2]
+WAIT_STOP_BIT:
+    LOAD TIMER_L       // [2] Poll TIMER_L
+    JMPNZ WAIT_STOP_BIT // [3] Loop until zero
     
     JMP START          // [3] Loop back for next byte

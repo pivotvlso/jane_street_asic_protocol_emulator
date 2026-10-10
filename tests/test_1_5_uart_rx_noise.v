@@ -19,12 +19,35 @@ module test_1_5_uart_rx_noise;
         integer i; begin data = 0; for (i = 7; i >= 0; i = i - 1) begin ui_in[2] = 0; #100 ui_in[1] = 1; data[i] = uo_out[0]; #100 ui_in[1] = 0; end #60; end
     endtask
 
-    task load_cpu_ram(input [7:0] cmd, input [8*100-1:0] hex_file);
-        integer file, r; reg [3:0] nibble; begin
-            ui_in[0] = 0; spi_send_byte(cmd);
-            file = $fopen(hex_file, "r");
-            if (file) begin while (!$feof(file)) begin r = $fscanf(file, "%x\n", nibble); if (r == 1) spi_send_byte({4'b0, nibble}); end $fclose(file); end
-            ui_in[0] = 1; #100;
+    task load_cpu_ram(input [7:0] cmd, input [8*100-1:0] base_file);
+        reg [8*150-1:0] op_file, op1_file, op2_file, jmp_file;
+        begin
+            op_file = {base_file, "_op.hex"};
+            op1_file = {base_file, "_op1.hex"};
+            op2_file = {base_file, "_op2.hex"};
+            jmp_file = {base_file, "_jmp.hex"};
+            
+            if (cmd == 8'h00) begin
+                $readmemh(op_file, dut.cpu0_rom_op);
+                $readmemh(op1_file, dut.cpu0_rom_op1);
+                $readmemh(op2_file, dut.cpu0_rom_op2);
+                $readmemh(jmp_file, dut.cpu0_jmp_table);
+            end else if (cmd == 8'h01) begin
+                $readmemh(op_file, dut.cpu1_rom_op);
+                $readmemh(op1_file, dut.cpu1_rom_op1);
+                $readmemh(op2_file, dut.cpu1_rom_op2);
+                $readmemh(jmp_file, dut.cpu1_jmp_table);
+            end else if (cmd == 8'h08) begin
+                $readmemh(op_file, dut.cpu2_rom_op);
+                $readmemh(op1_file, dut.cpu2_rom_op1);
+                $readmemh(op2_file, dut.cpu2_rom_op2);
+                $readmemh(jmp_file, dut.cpu2_jmp_table);
+            end else if (cmd == 8'h09) begin
+                $readmemh(op_file, dut.cpu3_rom_op);
+                $readmemh(op1_file, dut.cpu3_rom_op1);
+                $readmemh(op2_file, dut.cpu3_rom_op2);
+                $readmemh(jmp_file, dut.cpu3_jmp_table);
+            end
         end
     endtask
 
@@ -47,7 +70,7 @@ module test_1_5_uart_rx_noise;
         ui_in = 0; ui_in[0] = 1; uio_in = 8'hFF; ena = 1; rst_n = 0; #50 rst_n = 1; #50;
         $display("[Test 1.5] UART RX Noise Rejection");
         
-        load_cpu_ram(8'h01, "protocols/uart/uart_rx.hex"); // Load CPU 1
+        load_cpu_ram(8'h01, "protocols/uart/uart_rx"); // Load CPU 1
         
         ui_in[0] = 0; spi_send_byte(8'h07); ui_in[0] = 1; #20; // RUN CPU 1
         #100;

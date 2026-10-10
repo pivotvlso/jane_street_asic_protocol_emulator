@@ -34,6 +34,8 @@ To allow for full-duplex emulation across multiple protocols, the ASIC features 
                                 [ SHARED REGISTERS ]
                                 [  SHARED_0 (0x9)  ]
                                 [  SHARED_1 (0xA)  ]
+                                [  SHARED_2 (0xB)  ]
+                                [  SHARED_3 (0xC)  ]
                                           |
                                           v
                                      [uio[3:0]]

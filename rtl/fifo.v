@@ -24,6 +24,11 @@ module fifo #(
     assign empty = (count == 0);
     assign full  = (count == DEPTH);
     
+    always @(posedge clk) begin
+        if (we && !full) $display("[%0t] FIFO WRITE: %h", $time, wdata);
+        if (re && !empty) $display("[%0t] FIFO READ: %h", $time, mem[rptr[2:0]]);
+    end
+    
     assign rdata = mem[rptr[2:0]];
     
     always @(posedge clk or negedge rst_n) begin

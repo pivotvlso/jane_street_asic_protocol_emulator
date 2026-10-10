@@ -19,11 +19,11 @@ module decoder (
     // --------------------------------------------------------
     // Instruction Length Decoder
     // --------------------------------------------------------
-    // MSB = 0 means 1-nibble. 
-    // MSB = 1 means 2 or 3 nibbles.
-    assign is_1_nibble = (opcode[3] == 1'b0);
-    assign is_2_nibble = (opcode[3] == 1'b1) && (opcode < 4'hD) && (opcode != 4'hA);
-    assign is_3_nibble = (opcode[3] == 1'b1) && ((opcode >= 4'hD) || (opcode == 4'hA));
+    // MSB = 0 means 1-nibble (Except 0x7 LOADIB is 3 nibbles). 
+    // MSB = 1 means 2 nibbles (Except 0xA LOADI is 3 nibbles).
+    assign is_1_nibble = (opcode[3] == 1'b0) && (opcode != 4'h7);
+    assign is_2_nibble = (opcode[3] == 1'b1) && (opcode != 4'hA);
+    assign is_3_nibble = (opcode == 4'h7) || (opcode == 4'hA);
 
     // --------------------------------------------------------
     // Operation Type Decoder
@@ -32,7 +32,7 @@ module decoder (
     assign is_math      = (opcode <= 4'h5);
     
     // Jumps (D = JMP, E = JMPNZ, F = JMPC)
-    assign is_jump      = is_3_nibble;
+    assign is_jump      = (opcode >= 4'hD);
     
     // Memory / Immediate Ops
     assign is_mem_load  = (opcode == 4'hC);

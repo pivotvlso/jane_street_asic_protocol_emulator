@@ -13,8 +13,22 @@ When the host has finished sending the "last data," it simply raises the `spi_cs
 
 ## Commands Supported
 
-### 1. Programming the CPU Instruction RAMs (Commands: `0x00`, `0x01`, `0x08`, `0x09`)
-When the host sends one of these commands (e.g., `0x00` for CPU 0), the SPI slave prepares to write to that CPU's instruction memory. For every subsequent byte received, it isolates the lower 4 bits (a nibble), asserts the `ram_we` (Write Enable) strobe, and automatically increments an internal address pointer. This allows the host to flash an entire 128-nibble program into a CPU in a single, fast SPI transaction.
+### 1. Programming the Split-Stream Instruction RAMs
+Due to the new 1-cycle pipeline architecture, each CPU has its instruction memory split into four separate parallel streams:
+- `OP` (Opcode stream, 128 nibbles)
+- `OP1` (First Operand stream, 64 nibbles)
+- `OP2` (Second Operand stream, 8 nibbles)
+- `JMP` (Jump Table, 16 entries of 15 bits)
+
+The SPI Slave supports distinct commands for each stream and CPU:
+- **CPU 0:** `0x00` (OP), `0x10` (OP1), `0x20` (OP2), `0x30` (JMP)
+- **CPU 1:** `0x01` (OP), `0x11` (OP1), `0x21` (OP2), `0x31` (JMP)
+- **CPU 2:** `0x08` (OP), `0x18` (OP1), `0x28` (OP2), `0x38` (JMP)
+- **CPU 3:** `0x09` (OP), `0x19` (OP1), `0x29` (OP2), `0x39` (JMP)
+
+For `OP`, `OP1`, and `OP2`, the SPI slave isolates the lower 4 bits of each received byte and writes it to the RAM.
+For `JMP`, each jump target is 15 bits wide, so the SPI slave groups every two bytes received into a 15-bit address and writes it to the jump table.
+All streams automatically auto-increment their respective internal address pointers with each write, allowing the host to quickly flash the firmware.
 
 ### 2. Streaming Data to RX FIFOs (Commands: `0x02`, `0x03`, `0x0A`, `0x0B`)
 If a CPU is emulating a protocol that transmits data (like a UART transmitter), the host can supply that data by sending a write command (e.g., `0x02` for CPU 0). The SPI slave collects 8-bit bytes from the `spi_mosi` pin and pushes them directly into the CPU's `RX_FIFO` by asserting the `rx_fifo_we` strobe.

@@ -50,19 +50,35 @@ module test_3_4_i2c_loopback_rx;
         end
     endtask
 
-    task load_cpu_ram(input [7:0] cmd, input [8*100-1:0] hex_file);
-        integer file, r; reg [3:0] nibble; begin
-            ui_in[0] = 0; spi_send_byte(cmd);
-            file = $fopen(hex_file, "r");
-            if (file) begin
-                while (!$feof(file)) begin
-                    r = $fscanf(file, "%x\n", nibble);
-                    if (r == 1) begin
-                        //$display("Loading %x", nibble); // Optional, commented to avoid spam
-                        spi_send_byte({4'b0, nibble});
-                    end
-                end $fclose(file);
-            end ui_in[0] = 1; #100;
+    task load_cpu_ram(input [7:0] cmd, input [8*100-1:0] base_file);
+        reg [8*150-1:0] op_file, op1_file, op2_file, jmp_file;
+        begin
+            op_file = {base_file, "_op.hex"};
+            op1_file = {base_file, "_op1.hex"};
+            op2_file = {base_file, "_op2.hex"};
+            jmp_file = {base_file, "_jmp.hex"};
+            
+            if (cmd == 8'h00) begin
+                $readmemh(op_file, dut.cpu0_rom_op);
+                $readmemh(op1_file, dut.cpu0_rom_op1);
+                $readmemh(op2_file, dut.cpu0_rom_op2);
+                $readmemh(jmp_file, dut.cpu0_jmp_table);
+            end else if (cmd == 8'h01) begin
+                $readmemh(op_file, dut.cpu1_rom_op);
+                $readmemh(op1_file, dut.cpu1_rom_op1);
+                $readmemh(op2_file, dut.cpu1_rom_op2);
+                $readmemh(jmp_file, dut.cpu1_jmp_table);
+            end else if (cmd == 8'h08) begin
+                $readmemh(op_file, dut.cpu2_rom_op);
+                $readmemh(op1_file, dut.cpu2_rom_op1);
+                $readmemh(op2_file, dut.cpu2_rom_op2);
+                $readmemh(jmp_file, dut.cpu2_jmp_table);
+            end else if (cmd == 8'h09) begin
+                $readmemh(op_file, dut.cpu3_rom_op);
+                $readmemh(op1_file, dut.cpu3_rom_op1);
+                $readmemh(op2_file, dut.cpu3_rom_op2);
+                $readmemh(jmp_file, dut.cpu3_jmp_table);
+            end
         end
     endtask
 
@@ -74,8 +90,8 @@ module test_3_4_i2c_loopback_rx;
         $display("[Test 3.4] I2C Multi-Core Loopback RX (CPU0=Master_RX, CPU1=Slave_TX)");
         
         // Load CPU 0 with Master RX, CPU 1 with Slave TX
-        load_cpu_ram(8'h00, "protocols/i2c/i2c_master_rx.hex");
-        load_cpu_ram(8'h01, "protocols/i2c/i2c_slave_tx.hex");
+        load_cpu_ram(8'h00, "protocols/i2c/i2c_master_rx");
+        load_cpu_ram(8'h01, "protocols/i2c/i2c_slave_tx");
         
         $monitor("[%0t] SCL=%b, SDA=%b", $time, scl, sda);
         
