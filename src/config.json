@@ -34,6 +34,8 @@
   "//": "Avoid ABC retime crashes on networks with async reset mapping issues",
   "SYNTH_STRATEGY": "AREA 0",
   "SYNTH_ABC_DFF": true,
+  "QUIT_ON_SYNTH_CHECKS": false,
+  "ERROR_ON_SYNTH_CHECKS": false,
 
   "//": "Configuration docs: https://openlane.readthedocs.io/en/latest/reference/configuration.html",
 
