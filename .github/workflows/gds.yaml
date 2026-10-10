@@ -23,6 +23,13 @@ jobs:
         with:
           flow: openlane2
 
+      - name: Upload OpenLane Logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: openlane-logs
+          path: runs/wokwi/logs/
+          
   precheck:
     needs: gds
     runs-on: ubuntu-latest
