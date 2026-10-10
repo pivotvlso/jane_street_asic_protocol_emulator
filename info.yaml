@@ -1,0 +1,50 @@
+--- 
+# TinyTapeout project information
+project:
+  title:        "Quad-Core Protocol Emulator"
+  author:       "Antigravity"
+  discord:      ""
+  description:  "A 4-core bare-metal accumulator architecture designed to bit-bang protocols."
+  language:     "Verilog"
+  clock_hz:     50000000
+
+  # How many tiles your design occupies? A single tile is about 160x100 uM.
+  tiles: "1x2"          # Because 4 CPUs + memories might need more area
+
+  # Your top module name must start with "tt_um_".
+  top_module:  "tt_um_protocol_emulator"
+
+  # List your project's source files here. Source files must be in ./src and you must list each source file separately, one per line.
+  source_files:
+    - "tt_um_protocol_emulator.v"
+    - "cpu_core.v"
+    - "decoder.v"
+    - "fifo.v"
+    - "timer.v"
+    - "rom.v"
+
+pinout:
+  ui[0]: "SPI CS"
+  ui[1]: "SPI SCLK"
+  ui[2]: "SPI MOSI"
+  ui[3]: "Unused"
+  ui[4]: "CPU0 Run"
+  ui[5]: "CPU1 Run"
+  ui[6]: "CPU2 Run"
+  ui[7]: "CPU3 Run"
+  uo[0]: "SPI MISO"
+  uo[1]: "CPU0 RX Empty"
+  uo[2]: "CPU1 RX Empty"
+  uo[3]: "CPU2 RX Empty"
+  uo[4]: "CPU3 RX Empty"
+  uo[5]: "CPU0 TX Empty"
+  uo[6]: "CPU1 TX Empty"
+  uo[7]: "CPU2 TX Empty"
+  uio[0]: "D+ / TX / IO0"
+  uio[1]: "D- / RX / IO1"
+  uio[2]: "IO2"
+  uio[3]: "IO3"
+  uio[4]: "Unused"
+  uio[5]: "Unused"
+  uio[6]: "Unused"
+  uio[7]: "Unused"

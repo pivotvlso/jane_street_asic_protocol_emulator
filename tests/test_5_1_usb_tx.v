@@ -10,7 +10,7 @@ module test_5_1_usb_tx;
     wire [7:0] uio_out;
     wire [7:0] uio_oe;
 
-    top dut (
+    tt_um_protocol_emulator dut (
         .ui_in(ui_in),
         .uo_out(uo_out),
         .uio_in(uio_in),
@@ -56,23 +56,8 @@ module test_5_1_usb_tx;
         rst_n = 1;
         #100;
 
-        // Load CPU 3 Serializer
-        $readmemh("protocols/usb/usb_cpu3_tx_serializer_op.hex", dut.cpu3_rom_op);
-        $readmemh("protocols/usb/usb_cpu3_tx_serializer_op1.hex", dut.cpu3_rom_op1);
-        $readmemh("protocols/usb/usb_cpu3_tx_serializer_op2.hex", dut.cpu3_rom_op2);
-        $readmemh("protocols/usb/usb_cpu3_tx_serializer_jmp.hex", dut.cpu3_jmp_table);
         
-        // Load CPU 2 Bit Stuffer
-        $readmemh("protocols/usb/usb_cpu2_tx_stuffer_op.hex", dut.cpu2_rom_op);
-        $readmemh("protocols/usb/usb_cpu2_tx_stuffer_op1.hex", dut.cpu2_rom_op1);
-        $readmemh("protocols/usb/usb_cpu2_tx_stuffer_op2.hex", dut.cpu2_rom_op2);
-        $readmemh("protocols/usb/usb_cpu2_tx_stuffer_jmp.hex", dut.cpu2_jmp_table);
         
-        // Load CPU 1 NRZI Driver
-        $readmemh("protocols/usb/usb_cpu1_tx_nrzi_op.hex", dut.cpu1_rom_op);
-        $readmemh("protocols/usb/usb_cpu1_tx_nrzi_op1.hex", dut.cpu1_rom_op1);
-        $readmemh("protocols/usb/usb_cpu1_tx_nrzi_op2.hex", dut.cpu1_rom_op2);
-        $readmemh("protocols/usb/usb_cpu1_tx_nrzi_jmp.hex", dut.cpu1_jmp_table);
 
         // Turn on CPU 1, 2, 3
         ui_in[7:5] = 3'b111; 
