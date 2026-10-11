@@ -13,14 +13,6 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Clean up stale Nix backup
-        run: sudo rm -f /etc/bash.bashrc.backup-before-nix /etc/bashrc.backup-before-nix /etc/zshrc.backup-before-nix
-
-      - name: Install Nix
-        uses: cachix/install-nix-action@v30
-        with:
-          nix_path: nixpkgs=channel:nixos-unstable
-
       - name: Build GDS
         uses: TinyTapeout/tt-gds-action@tt08
         with:
@@ -37,14 +29,6 @@ jobs:
     needs: gds
     runs-on: ubuntu-latest
     steps:
-      - name: Clean up stale Nix backup
-        run: sudo rm -f /etc/bash.bashrc.backup-before-nix /etc/bashrc.backup-before-nix /etc/zshrc.backup-before-nix
-
-      - name: Install Nix
-        uses: cachix/install-nix-action@v30
-        with:
-          nix_path: nixpkgs=channel:nixos-unstable
-
       - name: Run Tiny Tapeout Precheck
         uses: TinyTapeout/tt-gds-action/precheck@tt08
 
