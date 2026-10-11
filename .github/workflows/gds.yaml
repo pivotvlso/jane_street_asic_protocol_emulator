@@ -13,6 +13,9 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Clean up stale Nix backup
+        run: sudo rm -f /etc/bash.bashrc.backup-before-nix /etc/bashrc.backup-before-nix /etc/zshrc.backup-before-nix
+
       - name: Install Nix
         uses: cachix/install-nix-action@v30
         with:
@@ -34,6 +37,9 @@ jobs:
     needs: gds
     runs-on: ubuntu-latest
     steps:
+      - name: Clean up stale Nix backup
+        run: sudo rm -f /etc/bash.bashrc.backup-before-nix /etc/bashrc.backup-before-nix /etc/zshrc.backup-before-nix
+
       - name: Install Nix
         uses: cachix/install-nix-action@v30
         with:
@@ -50,3 +56,4 @@ jobs:
       id-token: write   # to verify the deployment originates from an appropriate source
     steps:
       - uses: TinyTapeout/tt-gds-action/viewer@tt08
+        continue-on-error: true
